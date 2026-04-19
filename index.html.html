@@ -106,8 +106,8 @@ body{background:#0d1117;width:100vw;height:100vh;overflow:hidden;font-family:'Se
 #hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:100;font-size:9px;color:#1a2535;letter-spacing:2px;text-transform:uppercase;pointer-events:none}
 
 /* Custom marker */
-.mkr{width:14px;height:14px;border-radius:50%;cursor:pointer;border:2px solid rgba(255,255,255,.3);box-shadow:0 0 8px currentColor;transition:transform .15s}
-.mkr:hover{transform:scale(1.5)}
+.mkr{width:12px;height:12px;border-radius:50%;cursor:pointer;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 6px currentColor}
+.mkr:hover{box-shadow:0 0 14px currentColor;border-color:rgba(255,255,255,.8)}
 </style>
 </head>
 <body>
@@ -613,11 +613,11 @@ map.addControl(new mapboxgl.NavigationControl({showCompass:false}),'top-right');
 // Add atmosphere on globe
 map.on('style.load',function(){
   map.setFog({
-    color:'rgb(100,120,150)',
-    'high-color':'rgb(30,50,100)',
-    'horizon-blend':0.008,
-    'space-color':'rgb(5,8,18)',
-    'star-intensity':0.4
+    color:'rgb(160,180,210)',
+    'high-color':'rgb(60,100,180)',
+    'horizon-blend':0.04,
+    'space-color':'rgb(8,12,22)',
+    'star-intensity':0.5
   });
   buildMarkers();
 });
@@ -639,7 +639,7 @@ function buildMarkers(){
       e.stopPropagation();
       showEv(ev);
     });
-    var m=new mapboxgl.Marker({element:el})
+    var m=new mapboxgl.Marker({element:el, anchor:'center'})
       .setLngLat([ev.lo,ev.la])
       .addTo(map);
     markers.push(m);
