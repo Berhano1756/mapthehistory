@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MapTheHistory</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0d1117;overflow:hidden;width:100vw;height:100vh;font-family:'Segoe UI',Arial,sans-serif;color:#c9d1d9}
+canvas{position:absolute;top:0;left:0}
+/* HEADER */
+#hdr{position:absolute;top:0;left:0;right:0;z-index:10;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(13,17,23,.97) 70%,transparent)}
+#logo{font-size:18px;letter-spacing:4px;color:#e8b84b;text-transform:uppercase;font-weight:300}
+#logo b{color:#f0d060;font-weight:600}
+#tag{font-size:9px;color:#3a4050;letter-spacing:2px;text-transform:uppercase;margin-top:2px}
+#ls{background:rgba(13,17,23,.9);border:1px solid #30363d;color:#8b949e;padding:5px 9px;font-size:11px;cursor:pointer;outline:none;border-radius:4px}
+/* LEFT PANEL */
+#lp{position:absolute;top:56px;left:16px;z-index:10;width:215px;display:flex;flex-direction:column;gap:7px}
+.box{background:rgba(10,14,22,.93);border:1px solid #1e2535;border-radius:6px;padding:10px 12px}
+.bl{display:block;font-size:9px;color:#e8b84b;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;font-weight:600}
+.box input{width:100%;background:rgba(255,255,255,.04);border:1px solid #1e2535;color:#c9d1d9;padding:6px 8px;font-size:12px;border-radius:4px;outline:none}
+.box input:focus{border-color:#e8b84b}
+.box input::placeholder{color:#2e3850}
+#sr{max-height:145px;overflow-y:auto;margin-top:6px;display:none}
+.si{padding:6px 8px;font-size:11px;color:#8b949e;cursor:pointer;border-radius:3px;border-bottom:1px solid #0d1117}
+.si:hover{background:rgba(232,184,75,.08);color:#e8b84b}
+.si strong{color:#e6edf3;display:block;font-size:12px}
+.sb{display:inline-block;font-size:9px;padding:1px 5px;border-radius:8px;margin-right:4px;font-weight:500}
+.yr{display:flex;gap:6px;align-items:center}
+.yr input{flex:1;text-align:center}
+.yr span{color:#2e3850;font-size:11px}
+#ya{width:100%;margin-top:6px;background:rgba(232,184,75,.12);border:1px solid rgba(232,184,75,.3);color:#e8b84b;padding:6px;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:4px;font-weight:600}
+#ya:hover{background:rgba(232,184,75,.2)}
+.fb{display:flex;align-items:center;gap:7px;padding:4px 5px;cursor:pointer;font-size:11px;border-radius:4px;color:#3a4560;transition:all .15s;user-select:none}
+.fb:hover{background:rgba(255,255,255,.03)}
+.fb.on{color:#8b949e}
+.fd{width:8px;height:8px;border-radius:50%;flex-shrink:0;opacity:.4}
+.fb.on .fd{opacity:1}
+.fc{margin-left:auto;font-size:10px;color:#2e3850}
+/* YEAR PANEL */
+#yp{position:absolute;right:18px;top:50%;transform:translateY(-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:8px}
+#yd{font-size:30px;color:#e8b84b;letter-spacing:2px;min-width:85px;text-align:center;font-weight:300}
+#ye{font-size:9px;color:#2e3850;letter-spacing:2px;text-transform:uppercase;text-align:center;min-height:13px}
+#ys{-webkit-appearance:none;appearance:none;writing-mode:vertical-lr;direction:rtl;width:3px;height:300px;background:rgba(30,37,53,.9);border-radius:2px;outline:none;cursor:pointer}
+#ys::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#e8b84b;cursor:pointer;box-shadow:0 0 8px rgba(232,184,75,.5)}
+.yt{font-size:9px;color:#1e2535}
+#ec{position:absolute;top:56px;right:56px;z-index:10;font-size:10px;color:#2e3850;text-align:right}
+#ec span{color:#e8b84b}
+/* EVENT PANEL */
+#ep{position:absolute;right:0;top:0;bottom:0;z-index:10;width:340px;background:rgba(10,14,22,.97);border-left:1px solid #1e2535;display:none;flex-direction:column;overflow:hidden}
+#ep.show{display:flex}
+#ecl{position:absolute;top:12px;right:12px;z-index:5;color:#484f58;cursor:pointer;font-size:16px;background:rgba(16,22,36,.95);border:1px solid #1e2535;border-radius:4px;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
+#ecl:hover{color:#e8b84b;border-color:rgba(232,184,75,.4)}
+#ewi{width:100%;height:175px;object-fit:cover;display:none;flex-shrink:0}
+#epb{padding:18px 20px;overflow-y:auto;flex:1}
+#epb::-webkit-scrollbar{width:3px}
+#epb::-webkit-scrollbar-thumb{background:#1e2535}
+#etop{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.el{display:inline-flex;align-items:center;gap:4px;font-size:11px;text-decoration:none;padding:6px 12px;border-radius:4px;font-weight:600;transition:all .15s}
+.ew{background:#4a3210;color:#f0b84a;border:1px solid #7a5418}.ew:hover{background:#6a4812}
+.ey{background:#4a1614;color:#f85149;border:1px solid #7a2220}.ey:hover{background:#6a2018}
+.em{background:#0e1f3e;color:#388bfd;border:1px solid #1a3470}.em:hover{background:#162c58}
+#ecat{display:inline-block;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;padding:2px 9px;border-radius:10px;margin-bottom:10px}
+#eyr{font-size:11px;letter-spacing:2px;color:#e8b84b;margin-bottom:5px;text-transform:uppercase;font-weight:500}
+#ett{font-size:20px;color:#e6edf3;line-height:1.3;margin-bottom:5px;font-weight:500}
+#eco{font-size:10px;color:#388bfd;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
+#ede{font-size:13px;color:#8b949e;line-height:1.9;margin-bottom:12px}
+#ewx{font-size:12px;color:#6e7681;line-height:1.75;padding:10px 12px;background:rgba(255,255,255,.02);border-radius:4px;border-left:2px solid rgba(232,184,75,.3);display:none}
+.cw{background:rgba(248,81,73,.15);color:#f85149;border:1px solid rgba(248,81,73,.3)}
+.cp{background:rgba(56,139,253,.15);color:#388bfd;border:1px solid rgba(56,139,253,.3)}
+.cs{background:rgba(63,185,80,.15);color:#3fb950;border:1px solid rgba(63,185,80,.3)}
+.cc{background:rgba(210,153,34,.15);color:#d2933a;border:1px solid rgba(210,153,34,.3)}
+.cd{background:rgba(255,123,0,.15);color:#ff7b00;border:1px solid rgba(255,123,0,.3)}
+.ce{background:rgba(188,140,228,.15);color:#bc8ce4;border:1px solid rgba(188,140,228,.3)}
+.ck{background:rgba(41,174,218,.15);color:#29aedb;border:1px solid rgba(41,174,218,.3)}
+/* ADD PANEL */
+#ab{position:absolute;bottom:18px;left:240px;z-index:10;background:rgba(10,14,22,.9);border:1px solid #1e2535;color:#8b949e;padding:7px 13px;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:4px}
+#ab:hover{border-color:#e8b84b;color:#e8b84b}
+#ap{position:absolute;bottom:55px;left:240px;z-index:10;width:262px;background:rgba(10,14,22,.97);border:1px solid #1e2535;border-radius:6px;padding:14px;display:none}
+#ap.show{display:block}
+#ap h3{font-size:10px;letter-spacing:1.5px;color:#e8b84b;text-transform:uppercase;margin-bottom:11px;font-weight:600}
+.fg{margin-bottom:7px}
+.fg label{display:block;font-size:9px;color:#484f58;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.fg input,.fg select,.fg textarea{width:100%;background:rgba(255,255,255,.03);border:1px solid #1e2535;color:#c9d1d9;padding:5px 8px;font-size:11px;border-radius:4px;outline:none}
+.fg input:focus,.fg select:focus{border-color:#e8b84b}
+.fg select option{background:#0d1117}
+.fg textarea{resize:none;height:50px}
+#svb{width:100%;background:rgba(232,184,75,.12);border:1px solid rgba(232,184,75,.3);color:#e8b84b;padding:7px;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:4px;margin-top:2px;font-weight:600}
+#svb:hover{background:rgba(232,184,75,.22)}
+#apc{position:absolute;top:10px;right:10px;color:#484f58;cursor:pointer;font-size:13px;background:none;border:none}
+#sm{font-size:10px;color:#3fb950;text-align:center;margin-top:5px;display:none}
+#hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:10;font-size:9px;color:#0e1520;letter-spacing:2px;text-transform:uppercase;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="hdr">
+  <div><div id="logo"><b>Map</b>TheHistory</div><div id="tag">Interactive Historical Atlas</div></div>
+  <select id="ls">
+    <option value="en">English</option>
+    <option value="zh">中文</option>
+    <option value="hi">हिन्दी</option>
+    <option value="es">Español</option>
+    <option value="ar">العربية</option>
+    <option value="tr">Türkçe</option>
+    <option value="fr">Français</option>
+    <option value="pt">Português</option>
+    <option value="ru">Русский</option>
+    <option value="de">Deutsch</option>
+  </select>
+</div>
+
+<div id="lp">
+  <div class="box">
+    <span class="bl" id="l-search">Search Events &amp; People</span>
+    <input type="text" id="se" placeholder="e.g. Napoleon, Battle...">
+    <div id="sr"></div>
+  </div>
+  <div class="box">
+    <span class="bl" id="l-year">Year / Year Range</span>
+    <div class="yr">
+      <input type="number" id="yf" placeholder="From e.g. -480">
+      <span>—</span>
+      <input type="number" id="yt2" placeholder="To e.g. 1945">
+    </div>
+    <button id="ya">Apply</button>
+  </div>
+  <div class="box">
+    <span class="bl" id="l-cats">Categories</span>
+    <div class="fb on" data-c="war"><span class="fd" style="background:#f85149"></span><span class="cl">War</span><span class="fc" id="fc-war"></span></div>
+    <div class="fb on" data-c="politics"><span class="fd" style="background:#388bfd"></span><span class="cl">Politics</span><span class="fc" id="fc-politics"></span></div>
+    <div class="fb on" data-c="science"><span class="fd" style="background:#3fb950"></span><span class="cl">Science</span><span class="fc" id="fc-science"></span></div>
+    <div class="fb on" data-c="culture"><span class="fd" style="background:#d2933a"></span><span class="cl">Culture</span><span class="fc" id="fc-culture"></span></div>
+    <div class="fb on" data-c="disaster"><span class="fd" style="background:#ff7b00"></span><span class="cl">Disaster</span><span class="fc" id="fc-disaster"></span></div>
+    <div class="fb on" data-c="exploration"><span class="fd" style="background:#bc8ce4"></span><span class="cl">Exploration</span><span class="fc" id="fc-exploration"></span></div>
+    <div class="fb on" data-c="economy"><span class="fd" style="background:#29aedb"></span><span class="cl">Economy</span><span class="fc" id="fc-economy"></span></div>
+  </div>
+</div>
+
+<div id="yp">
+  <div id="yd">1969</div>
+  <div id="ye">Cold War Era</div>
+  <input type="range" id="ys" min="-3000" max="2024" value="1969" step="1">
+  <div class="yt">3000 BC</div>
+</div>
+
+<div id="ec"><span id="ecn">0</span> events</div>
+
+<div id="ep">
+  <button id="ecl">✕</button>
+  <img id="ewi" src="" alt="">
+  <div id="epb">
+    <div id="etop">
+      <a id="ewl" class="el ew" href="#" target="_blank">📖 Wikipedia</a>
+      <a id="eyl" class="el ey" href="#" target="_blank">▶ YouTube</a>
+      <a id="eml" class="el em" href="#" target="_blank">🗺 Maps</a>
+    </div>
+    <div id="ecat"></div>
+    <div id="eyr"></div>
+    <div id="ett"></div>
+    <div id="eco"></div>
+    <div id="ede"></div>
+    <div id="ewx"></div>
+  </div>
+</div>
+
+<button id="ab">+ Add Event</button>
+<div id="ap">
+  <button id="apc">✕</button>
+  <h3>Add Historical Event</h3>
+  <div class="fg"><label>Title</label><input type="text" id="c-title" placeholder="e.g. Battle of Waterloo"></div>
+  <div class="fg"><label>Year (negative = BC)</label><input type="number" id="c-year" placeholder="1815 or -480"></div>
+  <div class="fg"><label>Country / Region</label><input type="text" id="c-country" placeholder="Belgium"></div>
+  <div class="fg"><label>Latitude</label><input type="number" id="c-lat" placeholder="50.68" step="0.01"></div>
+  <div class="fg"><label>Longitude</label><input type="number" id="c-lon" placeholder="4.41" step="0.01"></div>
+  <div class="fg"><label>Category</label>
+    <select id="c-cat">
+      <option value="war">War</option><option value="politics">Politics</option>
+      <option value="science">Science</option><option value="culture">Culture</option>
+      <option value="disaster">Disaster</option><option value="exploration">Exploration</option>
+      <option value="economy">Economy</option>
+    </select>
+  </div>
+  <div class="fg"><label>Description</label><textarea id="c-desc" placeholder="Brief description..."></textarea></div>
+  <button id="svb">Save Event</button>
+  <div id="sm">Saved!</div>
+</div>
+
+<div id="hint">drag to rotate · scroll to zoom · click events</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script>
+// ── DATA
+const CC={war:'#f85149',politics:'#388bfd',science:'#3fb950',culture:'#d2933a',disaster:'#ff7b00',exploration:'#bc8ce4',economy:'#29aedb'};
+const CL={war:'cw',politics:'cp',science:'cs',culture:'cc',disaster:'cd',exploration:'ce',economy:'ck'};
+const DB=[
+{y:-3100,la:30.06,lo:31.25,t:"Unification of Egypt",co:"Egypt",d:"Pharaoh Narmer unites Upper and Lower Egypt, founding one of history's greatest civilizations.",c:"politics",w:"Narmer"},
+{y:-3000,la:32.54,lo:44.42,t:"Sumerian City-States",co:"Mesopotamia",d:"World's first cities — Ur, Uruk, Eridu — inventing writing, law, and organized religion.",c:"culture",w:"Sumer"},
+{y:-2560,la:29.98,lo:31.13,t:"Great Pyramid of Giza",co:"Egypt",d:"Pharaoh Khufu's pyramid — the tallest man-made structure for 3,800 years.",c:"culture",w:"Great_Pyramid_of_Giza"},
+{y:-1274,la:36.5,lo:36.9,t:"Battle of Kadesh",co:"Syria",d:"World's first recorded major battle — Egypt vs the Hittites.",c:"war",w:"Battle_of_Kadesh"},
+{y:-776,la:37.64,lo:21.63,t:"First Olympic Games",co:"Greece",d:"The ancient Greeks hold the first Olympic Games at Olympia.",c:"culture",w:"Ancient_Olympic_Games"},
+{y:-753,la:41.9,lo:12.5,t:"Founding of Rome",co:"Italy",d:"Romulus founds Rome on the banks of the Tiber River.",c:"politics",w:"Founding_of_Rome"},
+{y:-551,la:35.6,lo:116.9,t:"Birth of Confucius",co:"China",d:"His philosophy shapes East Asian civilization for 2,500 years.",c:"culture",w:"Confucius"},
+{y:-490,la:38.1,lo:24.0,t:"Battle of Marathon",co:"Greece",d:"Athenian forces repel the Persian invasion.",c:"war",w:"Battle_of_Marathon"},
+{y:-480,la:38.9,lo:22.6,t:"Battle of Thermopylae",co:"Greece",d:"300 Spartans hold the vast Persian army in a legendary last stand.",c:"war",w:"Battle_of_Thermopylae"},
+{y:-334,la:41.0,lo:28.9,t:"Alexander the Great",co:"Greece",d:"Alexander creates an empire stretching from Greece to India.",c:"war",w:"Alexander_the_Great"},
+{y:-221,la:34.3,lo:108.9,t:"China Unified",co:"China",d:"Qin Shi Huang becomes the first emperor of unified China.",c:"politics",w:"Qin_dynasty"},
+{y:-44,la:41.9,lo:12.5,t:"Caesar Assassinated",co:"Rome",d:"Julius Caesar stabbed 23 times, triggering the fall of the Roman Republic.",c:"politics",w:"Assassination_of_Julius_Caesar"},
+{y:1,la:31.7,lo:35.2,t:"Birth of Jesus Christ",co:"Judea",d:"Birth of Jesus marks year zero of the Christian calendar.",c:"culture",w:"Jesus"},
+{y:79,la:40.82,lo:14.43,t:"Eruption of Vesuvius",co:"Roman Empire",d:"Vesuvius buries Pompeii, preserving a snapshot of Roman life.",c:"disaster",w:"Eruption_of_Mount_Vesuvius_in_79_AD"},
+{y:105,la:34.3,lo:108.9,t:"Paper Invented",co:"China",d:"Cai Lun creates paper — one of history's most transformative inventions.",c:"science",w:"History_of_paper"},
+{y:476,la:41.9,lo:12.5,t:"Fall of Western Rome",co:"Italy",d:"The last Western Roman Emperor is deposed, ending the ancient world.",c:"politics",w:"Fall_of_the_Western_Roman_Empire"},
+{y:570,la:21.4,lo:39.8,t:"Birth of Muhammad",co:"Arabia",d:"The Prophet Muhammad born in Mecca — Islam will follow.",c:"culture",w:"Muhammad"},
+{y:800,la:48.8,lo:2.35,t:"Charlemagne Crowned Emperor",co:"France",d:"Charlemagne crowned Holy Roman Emperor, founding medieval Europe.",c:"politics",w:"Charlemagne"},
+{y:1000,la:51.1,lo:-56.5,t:"Norse Reach America",co:"Canada",d:"Leif Eriksson lands in Vinland — first Europeans in the Americas.",c:"exploration",w:"Leif_Erikson"},
+{y:1066,la:50.9,lo:0.58,t:"Battle of Hastings",co:"England",d:"William the Conqueror defeats Harold, reshaping England forever.",c:"war",w:"Battle_of_Hastings"},
+{y:1095,la:41.9,lo:12.5,t:"First Crusade",co:"Rome",d:"Pope Urban II calls for a holy war to recapture Jerusalem.",c:"war",w:"First_Crusade"},
+{y:1206,la:47.9,lo:106.9,t:"Mongol Empire Founded",co:"Mongolia",d:"Genghis Khan unites Mongol tribes, founding history's largest land empire.",c:"politics",w:"Mongol_Empire"},
+{y:1215,la:51.4,lo:-0.57,t:"Magna Carta",co:"England",d:"King John signs Magna Carta, establishing the rule of law.",c:"politics",w:"Magna_Carta"},
+{y:1347,la:43.7,lo:10.4,t:"Black Death",co:"Italy",d:"Bubonic plague kills one-third of Europe's population.",c:"disaster",w:"Black_Death"},
+{y:1440,la:48.1,lo:11.6,t:"Gutenberg Printing Press",co:"Germany",d:"Movable type printing revolutionizes the spread of knowledge.",c:"science",w:"Printing_press"},
+{y:1453,la:41.0,lo:28.9,t:"Fall of Constantinople",co:"Ottoman Empire",d:"Ottoman forces end 1,000 years of Byzantine rule.",c:"war",w:"Fall_of_Constantinople"},
+{y:1492,la:24.0,lo:-74.5,t:"Columbus Reaches Americas",co:"Bahamas",d:"First permanent European contact with the Americas.",c:"exploration",w:"Christopher_Columbus"},
+{y:1517,la:51.9,lo:12.6,t:"Luther's 95 Theses",co:"Germany",d:"Martin Luther sparks the Protestant Reformation.",c:"culture",w:"Ninety-five_Theses"},
+{y:1543,la:53.0,lo:18.6,t:"Copernican Revolution",co:"Poland",d:"Copernicus publishes his heliocentric model of the solar system.",c:"science",w:"Nicolaus_Copernicus"},
+{y:1588,la:50.4,lo:-4.2,t:"Defeat of Spanish Armada",co:"England",d:"England repels Philip II's invasion fleet.",c:"war",w:"Spanish_Armada"},
+{y:1687,la:52.2,lo:0.12,t:"Newton's Principia",co:"England",d:"Newton publishes laws of motion and universal gravitation.",c:"science",w:"Philosophiæ_Naturalis_Principia_Mathematica"},
+{y:1776,la:39.9,lo:-75.1,t:"American Independence",co:"United States",d:"The thirteen colonies declare independence from Britain.",c:"politics",w:"United_States_Declaration_of_Independence"},
+{y:1789,la:48.86,lo:2.35,t:"French Revolution",co:"France",d:"The storming of the Bastille ignites a revolution reshaping modern politics.",c:"politics",w:"French_Revolution"},
+{y:1804,la:48.86,lo:2.35,t:"Napoleon Crowned Emperor",co:"France",d:"Napoleon crowns himself Emperor at Notre Dame.",c:"politics",w:"Napoleon"},
+{y:1815,la:50.68,lo:4.41,t:"Battle of Waterloo",co:"Belgium",d:"Napoleon's final defeat ends 23 years of French Revolutionary wars.",c:"war",w:"Battle_of_Waterloo"},
+{y:1859,la:51.4,lo:-2.6,t:"Darwin's Origin of Species",co:"England",d:"Darwin publishes his theory of evolution by natural selection.",c:"science",w:"On_the_Origin_of_Species"},
+{y:1861,la:38.9,lo:-77.0,t:"American Civil War",co:"United States",d:"Four-year conflict that ends slavery in America.",c:"war",w:"American_Civil_War"},
+{y:1869,la:30.6,lo:32.3,t:"Suez Canal Opens",co:"Egypt",d:"The canal connecting Mediterranean and Red Sea opens.",c:"economy",w:"Suez_Canal"},
+{y:1896,la:37.97,lo:23.73,t:"Modern Olympics",co:"Greece",d:"First modern Olympic Games held in Athens.",c:"culture",w:"1896_Summer_Olympics"},
+{y:1903,la:35.9,lo:-75.7,t:"First Powered Flight",co:"United States",d:"Orville Wright's 12-second flight at Kitty Hawk launches aviation.",c:"science",w:"Wright_brothers"},
+{y:1905,la:47.4,lo:8.5,t:"Einstein's Special Relativity",co:"Switzerland",d:"Einstein publishes E=mc², revolutionizing physics.",c:"science",w:"Special_relativity"},
+{y:1912,la:41.7,lo:-49.9,t:"Titanic Sinks",co:"Atlantic Ocean",d:"The RMS Titanic sinks on its maiden voyage, killing 1,517.",c:"disaster",w:"Sinking_of_the_Titanic"},
+{y:1914,la:49.0,lo:3.0,t:"World War I Begins",co:"France",d:"Archduke Franz Ferdinand assassinated. WWI engulfs Europe.",c:"war",w:"World_War_I"},
+{y:1915,la:39.9,lo:41.3,t:"Armenian Genocide",co:"Ottoman Empire",d:"Up to 1.5 million Armenians systematically massacred.",c:"disaster",w:"Armenian_genocide"},
+{y:1917,la:55.75,lo:37.6,t:"Russian Revolution",co:"Russia",d:"Bolsheviks overthrow the Tsar, creating the world's first communist state.",c:"politics",w:"Russian_Revolution"},
+{y:1918,la:52.5,lo:13.4,t:"World War I Ends",co:"Germany",d:"The Armistice of November 11 ends four years of warfare.",c:"war",w:"Armistice_of_11_November_1918"},
+{y:1918,la:48.2,lo:11.6,t:"Spanish Flu Pandemic",co:"Global",d:"The deadliest pandemic in modern history kills 50–100 million.",c:"disaster",w:"Spanish_flu"},
+{y:1923,la:39.9,lo:32.86,t:"Turkish Republic Founded",co:"Turkey",d:"Atatürk proclaims the Republic of Turkey.",c:"politics",w:"Atatürk"},
+{y:1928,la:51.5,lo:-0.12,t:"Penicillin Discovered",co:"England",d:"Alexander Fleming discovers penicillin, founding the antibiotic era.",c:"science",w:"Penicillin"},
+{y:1929,la:40.7,lo:-74.0,t:"Wall Street Crash",co:"United States",d:"Stock market collapse triggers the Great Depression.",c:"economy",w:"Wall_Street_Crash_of_1929"},
+{y:1933,la:52.5,lo:13.4,t:"Hitler Becomes Chancellor",co:"Germany",d:"The Nazi regime transforms Germany into a dictatorship.",c:"politics",w:"Adolf_Hitler"},
+{y:1936,la:40.4,lo:-3.7,t:"Spanish Civil War",co:"Spain",d:"Franco's nationalists battle republicans.",c:"war",w:"Spanish_Civil_War"},
+{y:1939,la:52.2,lo:21.0,t:"World War II Begins",co:"Poland",d:"Germany invades Poland. The deadliest conflict in history begins.",c:"war",w:"World_War_II"},
+{y:1940,la:50.9,lo:1.8,t:"Dunkirk Evacuation",co:"France",d:"338,000 Allied troops evacuated from Dunkirk's beaches.",c:"war",w:"Dunkirk_evacuation"},
+{y:1941,la:21.3,lo:-157.8,t:"Attack on Pearl Harbor",co:"United States",d:"Japan's surprise attack brings the US into WWII.",c:"war",w:"Attack_on_Pearl_Harbor"},
+{y:1942,la:48.7,lo:44.5,t:"Battle of Stalingrad",co:"Soviet Union",d:"The bloodiest battle in history — nearly 2 million dead.",c:"war",w:"Battle_of_Stalingrad"},
+{y:1944,la:49.4,lo:-1.3,t:"D-Day Landings",co:"France",d:"The largest amphibious invasion in history.",c:"war",w:"Normandy_landings"},
+{y:1945,la:34.4,lo:132.4,t:"Hiroshima Atomic Bomb",co:"Japan",d:"First nuclear weapon used in war — 70,000+ killed instantly.",c:"war",w:"Atomic_bombings_of_Hiroshima_and_Nagasaki"},
+{y:1945,la:52.5,lo:13.4,t:"Fall of Berlin",co:"Germany",d:"Soviet forces capture Berlin. Nazi Germany surrenders.",c:"war",w:"Battle_of_Berlin"},
+{y:1945,la:37.8,lo:-122.4,t:"United Nations Founded",co:"United States",d:"50 nations sign the UN Charter in San Francisco.",c:"politics",w:"United_Nations"},
+{y:1947,la:28.6,lo:77.2,t:"Indian Independence",co:"India",d:"India and Pakistan gain independence from Britain.",c:"politics",w:"Indian_independence_movement"},
+{y:1948,la:31.8,lo:35.2,t:"State of Israel Founded",co:"Israel",d:"Israel declares independence, triggering the first Arab-Israeli war.",c:"politics",w:"Israeli_Declaration_of_Independence"},
+{y:1949,la:39.9,lo:116.4,t:"People's Republic of China",co:"China",d:"Mao Zedong proclaims communist victory.",c:"politics",w:"Proclamation_of_the_People%27s_Republic_of_China"},
+{y:1950,la:37.5,lo:127.0,t:"Korean War Begins",co:"Korea",d:"North Korea invades the South, drawing in US and Chinese forces.",c:"war",w:"Korean_War"},
+{y:1953,la:27.98,lo:86.92,t:"Everest First Summited",co:"Nepal",d:"Hillary and Tenzing — first humans on the world's highest peak.",c:"exploration",w:"1953_British_Mount_Everest_expedition"},
+{y:1957,la:55.75,lo:37.6,t:"Sputnik Launched",co:"Soviet Union",d:"The first satellite shocks the West and ignites the Space Race.",c:"science",w:"Sputnik_1"},
+{y:1961,la:52.5,lo:13.4,t:"Berlin Wall Built",co:"Germany",d:"East Germany erects the Wall overnight, dividing Berlin.",c:"politics",w:"Berlin_Wall"},
+{y:1961,la:28.5,lo:-80.6,t:"First Human in Space",co:"Soviet Union",d:"Yuri Gagarin orbits Earth — the first human in space.",c:"science",w:"Vostok_1"},
+{y:1962,la:23.1,lo:-82.4,t:"Cuban Missile Crisis",co:"Cuba",d:"The US and USSR come closest to nuclear war.",c:"war",w:"Cuban_missile_crisis"},
+{y:1963,la:32.78,lo:-96.8,t:"JFK Assassinated",co:"United States",d:"President Kennedy shot in Dallas, shocking the world.",c:"politics",w:"Assassination_of_John_F._Kennedy"},
+{y:1969,la:28.5,lo:-80.6,t:"Moon Landing",co:"United States",d:"Apollo 11: Neil Armstrong becomes first human on the Moon.",c:"science",w:"Apollo_11"},
+{y:1978,la:35.7,lo:51.4,t:"Iranian Revolution",co:"Iran",d:"Khomeini overthrows the Shah, establishing the Islamic Republic.",c:"politics",w:"Iranian_Revolution"},
+{y:1981,la:40.7,lo:-74.0,t:"AIDS Crisis",co:"United States",d:"CDC reports first AIDS cases. 36+ million will die worldwide.",c:"disaster",w:"HIV/AIDS"},
+{y:1986,la:51.3,lo:30.1,t:"Chernobyl Disaster",co:"Soviet Union",d:"The worst nuclear accident in history.",c:"disaster",w:"Chernobyl_disaster"},
+{y:1989,la:52.5,lo:13.4,t:"Berlin Wall Falls",co:"Germany",d:"East Germans tear down the Wall on November 9th.",c:"politics",w:"Fall_of_the_Berlin_Wall"},
+{y:1991,la:55.75,lo:37.6,t:"USSR Dissolved",co:"Soviet Union",d:"The Soviet Union dissolves, ending the Cold War.",c:"politics",w:"Dissolution_of_the_Soviet_Union"},
+{y:1994,la:-1.9,lo:29.9,t:"Rwandan Genocide",co:"Rwanda",d:"800,000 Tutsis murdered in 100 days.",c:"war",w:"Rwandan_genocide"},
+{y:2001,la:40.7,lo:-74.0,t:"September 11 Attacks",co:"United States",d:"Al-Qaeda kills 2,977 people. Global politics transformed overnight.",c:"war",w:"September_11_attacks"},
+{y:2004,la:3.3,lo:95.9,t:"Indian Ocean Tsunami",co:"Indonesia",d:"228,000 killed across 14 countries.",c:"disaster",w:"2004_Indian_Ocean_earthquake_and_tsunami"},
+{y:2008,la:40.7,lo:-74.0,t:"Global Financial Crisis",co:"United States",d:"Lehman Brothers collapse — worst crisis since 1929.",c:"economy",w:"Financial_crisis_of_2007%E2%80%932008"},
+{y:2010,la:35.0,lo:9.0,t:"Arab Spring",co:"Tunisia",d:"A street vendor's self-immolation triggers revolutions across the Arab world.",c:"politics",w:"Arab_Spring"},
+{y:2011,la:38.3,lo:141.0,t:"Fukushima Disaster",co:"Japan",d:"Earthquake and tsunami trigger three nuclear meltdowns.",c:"disaster",w:"Fukushima_nuclear_disaster"},
+{y:2014,la:50.4,lo:30.5,t:"Crimea Annexed",co:"Ukraine",d:"Russia annexes Crimea — worst East-West crisis since Cold War.",c:"war",w:"Annexation_of_Crimea_by_the_Russian_Federation"},
+{y:2015,la:48.8,lo:2.35,t:"Paris Climate Agreement",co:"France",d:"196 nations sign the most ambitious climate deal in history.",c:"politics",w:"Paris_Agreement"},
+{y:2019,la:23.1,lo:113.3,t:"COVID-19 Emerges",co:"China",d:"A novel coronavirus in Wuhan triggers a global pandemic.",c:"disaster",w:"COVID-19_pandemic"},
+{y:2022,la:50.4,lo:30.5,t:"Russia Invades Ukraine",co:"Ukraine",d:"Largest land war in Europe since WWII.",c:"war",w:"2022_Russian_invasion_of_Ukraine"},
+{y:2023,la:31.5,lo:34.4,t:"Hamas Attack on Israel",co:"Israel",d:"Hamas kills 1,200 Israelis, triggering the Gaza War.",c:"war",w:"2023_Hamas-led_attack_on_Israel"},
+{y:2023,la:37.0,lo:37.2,t:"Turkey-Syria Earthquake",co:"Turkey",d:"7.8 earthquake kills over 50,000 people.",c:"disaster",w:"2023_Turkey%E2%80%93Syria_earthquake"},
+];
+
+var uEv=[];try{uEv=JSON.parse(localStorage.getItem('mth_u')||'[]');}catch(e){}
+var aCats=new Set(['war','politics','science','culture','disaster','exploration','economy']);
+var curY=1969,rf=null,rt=null,WIN=5;
+
+function aEv(){return DB.concat(uEv);}
+function era(y){if(y<-2000)return'Prehistoric';if(y<-500)return'Ancient';if(y<500)return'Classical';if(y<1000)return'Early Medieval';if(y<1500)return'Medieval';if(y<1800)return'Early Modern';if(y<1900)return'Industrial Age';if(y<1945)return'Modern';if(y<1991)return'Cold War Era';return'Contemporary';}
+function gVis(){
+  if(rf!==null&&rt!==null)return aEv().filter(function(e){return e.y>=rf&&e.y<=rt&&aCats.has(e.c);});
+  return aEv().filter(function(e){return Math.abs(e.y-curY)<=WIN&&aCats.has(e.c);});
+}
+function updC(){
+  document.getElementById('ecn').textContent=gVis().length;
+  ['war','politics','science','culture','disaster','exploration','economy'].forEach(function(c){
+    var el=document.getElementById('fc-'+c);
+    if(el)el.textContent=aEv().filter(function(e){return e.c===c;}).length;
+  });
+}
+
+// ── THREE.JS
+var renderer=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.setClearColor(0x0d1117);
+
+var scene=new THREE.Scene();
+var cam=new THREE.PerspectiveCamera(42,window.innerWidth/window.innerHeight,0.1,1000);
+cam.position.z=2.2;
+
+scene.add(new THREE.AmbientLight(0x445566,2.5));
+var sun=new THREE.DirectionalLight(0xddeeff,1.8);
+sun.position.set(4,1.5,3);
+scene.add(sun);
+
+// Stars
+var sg=new THREE.BufferGeometry();
+var sp=[];
+for(var i=0;i<6000;i++){
+  var t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1),r=80+Math.random()*40;
+  sp.push(r*Math.sin(p)*Math.cos(t),r*Math.cos(p),r*Math.sin(p)*Math.sin(t));
+}
+sg.setAttribute('position',new THREE.Float32BufferAttribute(sp,3));
+scene.add(new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:0.12,transparent:true,opacity:0.6})));
+
+// Globe
+var glob=new THREE.Group();
+scene.add(glob);
+var emat=new THREE.MeshLambertMaterial({color:0x2255aa});
+glob.add(new THREE.Mesh(new THREE.SphereGeometry(1,64,64),emat));
+glob.add(new THREE.Mesh(new THREE.SphereGeometry(1.036,64,64),
+  new THREE.MeshLambertMaterial({color:0x7aadcc,transparent:true,opacity:0.08,side:THREE.FrontSide})));
+
+// Load texture
+new THREE.TextureLoader().load(
+  'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_atmos_2048.jpg',
+  function(tex){emat.map=tex;emat.color.set(0xffffff);emat.needsUpdate=true;},
+  undefined,
+  function(){
+    new THREE.TextureLoader().load(
+      'https://cdn.jsdelivr.net/npm/three-globe@2.26.4/example/img/earth-blue-marble.jpg',
+      function(tex){emat.map=tex;emat.color.set(0xffffff);emat.needsUpdate=true;}
+    );
+  }
+);
+
+// ── MARKERS
+function llv(la,lo,r){
+  var phi=(90-la)*Math.PI/180,theta=(lo+180)*Math.PI/180;
+  return new THREE.Vector3(-r*Math.sin(phi)*Math.cos(theta),r*Math.cos(phi),r*Math.sin(phi)*Math.sin(theta));
+}
+var mkg=new THREE.Group();
+glob.add(mkg);
+var mks=[];
+
+function buildMk(){
+  while(mkg.children.length)mkg.remove(mkg.children[0]);
+  mks=[];
+  gVis().forEach(function(ev){
+    var col=new THREE.Color(CC[ev.c]||'#fff');
+    var pos=llv(ev.la,ev.lo,1.012);
+    var m=new THREE.Mesh(new THREE.SphereGeometry(0.013,8,8),new THREE.MeshBasicMaterial({color:col}));
+    m.position.copy(pos);m.userData=ev;mkg.add(m);mks.push(m);
+    var ring=new THREE.Mesh(new THREE.RingGeometry(0.017,0.023,16),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0.35,side:THREE.DoubleSide}));
+    ring.position.copy(pos);ring.lookAt(new THREE.Vector3(0,0,0));ring.rotateX(Math.PI/2);mkg.add(ring);
+  });
+  updC();
+}
+buildMk();
+
+// ── MOUSE / TOUCH
+var ray=new THREE.Raycaster(),mou=new THREE.Vector2();
+var drag=false,px=0,py=0,trY=0.3,trX=0,rY=0.3,rX=0,autoR=true,zoom=2.2,pt=0;
+var cvs=renderer.domElement;
+
+cvs.addEventListener('mousedown',function(e){drag=true;autoR=false;px=e.clientX;py=e.clientY;cvs.style.cursor='grabbing';});
+window.addEventListener('mouseup',function(){drag=false;cvs.style.cursor='grab';});
+cvs.addEventListener('mousemove',function(e){
+  if(drag){
+    trY+=(e.clientX-px)*0.004;trX+=(e.clientY-py)*0.004;
+    trX=Math.max(-1.4,Math.min(1.4,trX));px=e.clientX;py=e.clientY;
+  } else {
+    mou.x=(e.clientX/window.innerWidth)*2-1;
+    mou.y=-(e.clientY/window.innerHeight)*2+1;
+    ray.setFromCamera(mou,cam);
+    cvs.style.cursor=ray.intersectObjects(mks).length?'pointer':'grab';
+  }
+});
+cvs.addEventListener('click',function(e){
+  mou.x=(e.clientX/window.innerWidth)*2-1;
+  mou.y=-(e.clientY/window.innerHeight)*2+1;
+  ray.setFromCamera(mou,cam);
+  var h=ray.intersectObjects(mks);
+  if(h.length)showEv(h[0].object.userData);
+});
+cvs.addEventListener('wheel',function(e){zoom+=e.deltaY*0.002;zoom=Math.max(1.3,Math.min(5,zoom));},{passive:true});
+var lt=null;
+cvs.addEventListener('touchstart',function(e){drag=true;autoR=false;lt={x:e.touches[0].clientX,y:e.touches[0].clientY};});
+window.addEventListener('touchend',function(){drag=false;});
+cvs.addEventListener('touchmove',function(e){
+  if(!drag||!lt)return;
+  trY+=(e.touches[0].clientX-lt.x)*0.004;trX+=(e.touches[0].clientY-lt.y)*0.004;
+  trX=Math.max(-1.4,Math.min(1.4,trX));
+  lt={x:e.touches[0].clientX,y:e.touches[0].clientY};
+  e.preventDefault();
+},{passive:false});
+
+// ── EVENT PANEL
+var wc={};
+function fetchWiki(t,cb){
+  if(!t){cb(null);return;}
+  if(wc[t]){cb(wc[t]);return;}
+  fetch('https://en.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(t))
+    .then(function(r){return r.json();})
+    .then(function(d){
+      wc[t]={ex:d.extract?d.extract.slice(0,380)+'...':null,th:d.thumbnail?d.thumbnail.source:null};
+      cb(wc[t]);
+    }).catch(function(){cb(null);});
+}
+
+function showEv(ev){
+  var wt=ev.w||ev.t.replace(/ /g,'_');
+  document.getElementById('ewl').href='https://en.wikipedia.org/wiki/'+wt;
+  document.getElementById('eyl').href='https://www.youtube.com/results?search_query='+encodeURIComponent(ev.t+' history');
+  document.getElementById('eml').href='https://www.google.com/maps/search/'+encodeURIComponent(ev.t+' '+ev.co);
+  document.getElementById('eyr').textContent=ev.y<0?Math.abs(ev.y)+' BC':ev.y+' AD';
+  document.getElementById('ett').textContent=ev.t;
+  document.getElementById('eco').textContent=ev.co;
+  document.getElementById('ede').textContent=ev.d;
+  var b=document.getElementById('ecat');
+  b.textContent=ev.c.charAt(0).toUpperCase()+ev.c.slice(1);
+  b.className=CL[ev.c]||'';
+  document.getElementById('ewx').style.display='none';
+  document.getElementById('ewi').style.display='none';
+  document.getElementById('ep').classList.add('show');
+  fetchWiki(ev.w,function(w){
+    if(!w)return;
+    if(w.th){var wi=document.getElementById('ewi');wi.src=w.th;wi.style.display='block';}
+    if(w.ex){var wx=document.getElementById('ewx');wx.textContent=w.ex;wx.style.display='block';}
+  });
+}
+document.getElementById('ecl').addEventListener('click',function(){document.getElementById('ep').classList.remove('show');});
+
+// ── YEAR SLIDER
+document.getElementById('ys').addEventListener('input',function(){
+  curY=parseInt(this.value);rf=null;rt=null;
+  document.getElementById('yf').value='';
+  document.getElementById('yt2').value='';
+  document.getElementById('yd').textContent=curY<0?Math.abs(curY)+' BC':curY;
+  document.getElementById('ye').textContent=era(curY);
+  buildMk();
+  document.getElementById('ep').classList.remove('show');
+});
+
+document.getElementById('ya').addEventListener('click',function(){
+  var f=parseInt(document.getElementById('yf').value);
+  var t=parseInt(document.getElementById('yt2').value);
+  if(!isNaN(f)&&!isNaN(t)){
+    rf=Math.min(f,t);rt=Math.max(f,t);
+    document.getElementById('yd').textContent=(rf<0?Math.abs(rf)+'BC':rf)+'–'+(rt<0?Math.abs(rt)+'BC':rt);
+    document.getElementById('ye').textContent='Range';
+  } else if(!isNaN(f)){
+    rf=null;rt=null;curY=f;
+    document.getElementById('ys').value=f;
+    document.getElementById('yd').textContent=f<0?Math.abs(f)+' BC':f;
+    document.getElementById('ye').textContent=era(f);
+  }
+  buildMk();
+  document.getElementById('ep').classList.remove('show');
+});
+
+document.querySelectorAll('.fb').forEach(function(b){
+  b.addEventListener('click',function(){
+    var c=b.dataset.c;
+    if(aCats.has(c)){aCats.delete(c);b.classList.remove('on');}
+    else{aCats.add(c);b.classList.add('on');}
+    buildMk();
+  });
+});
+
+// ── SEARCH
+var seEl=document.getElementById('se'),srEl=document.getElementById('sr');
+seEl.addEventListener('input',function(){
+  var q=seEl.value.trim().toLowerCase();
+  if(q.length<2){srEl.style.display='none';return;}
+  var hits=aEv().filter(function(e){
+    return e.t.toLowerCase().includes(q)||e.co.toLowerCase().includes(q)||e.d.toLowerCase().includes(q);
+  }).slice(0,10);
+  if(!hits.length){srEl.style.display='none';return;}
+  srEl.innerHTML=hits.map(function(ev,i){
+    return '<div class="si" data-i="'+i+'"><span class="sb '+CL[ev.c]+'">'+ev.c+'</span><strong>'+ev.t+'</strong>'+(ev.y<0?Math.abs(ev.y)+' BC':ev.y+' AD')+' · '+ev.co+'</div>';
+  }).join('');
+  srEl.style.display='block';
+  srEl.querySelectorAll('.si').forEach(function(el,i){
+    el.addEventListener('click',function(){
+      var ev=hits[i];
+      curY=ev.y;rf=null;rt=null;
+      document.getElementById('ys').value=curY;
+      document.getElementById('yd').textContent=curY<0?Math.abs(curY)+' BC':curY;
+      document.getElementById('ye').textContent=era(curY);
+      buildMk();showEv(ev);
+      srEl.style.display='none';seEl.value='';
+    });
+  });
+});
+document.addEventListener('click',function(e){if(!e.target.closest('.box'))srEl.style.display='none';});
+
+// ── LANGUAGE
+var LABELS={
+  en:{search:'Search Events & People',ph:'e.g. Napoleon, Battle...',year:'Year / Year Range',from:'From e.g. -480',to:'To e.g. 1945',apply:'Apply',cats:'Categories',add:'+ Add Event'},
+  zh:{search:'搜索事件和人物',ph:'例如：拿破仑，战役',year:'年份/年份范围',from:'从',to:'到',apply:'应用',cats:'类别',add:'+ 添加事件'},
+  hi:{search:'घटनाएं खोजें',ph:'जैसे नेपोलियन, युद्ध',year:'वर्ष / वर्ष सीमा',from:'से',to:'तक',apply:'लागू करें',cats:'श्रेणियां',add:'+ जोड़ें'},
+  es:{search:'Buscar eventos y personas',ph:'ej. Napoleón, Batalla',year:'Año / Rango de años',from:'Desde',to:'Hasta',apply:'Aplicar',cats:'Categorías',add:'+ Agregar evento'},
+  ar:{search:'البحث عن الأحداث',ph:'مثل نابليون، معركة',year:'السنة / نطاق السنوات',from:'من',to:'إلى',apply:'تطبيق',cats:'الفئات',add:'+ إضافة حدث'},
+  tr:{search:'Olay ve Kişi Ara',ph:'örn. Napolyon, Savaş',year:'Yıl / Yıl Aralığı',from:'Başlangıç',to:'Bitiş',apply:'Uygula',cats:'Kategoriler',add:'+ Olay Ekle'},
+  fr:{search:'Rechercher événements',ph:'ex. Napoléon, Bataille',year:"Année / Plage d'années",from:'De',to:'À',apply:'Appliquer',cats:'Catégories',add:'+ Ajouter'},
+  pt:{search:'Pesquisar eventos',ph:'ex. Napoleão, Batalha',year:'Ano / Intervalo',from:'De',to:'Até',apply:'Aplicar',cats:'Categorias',add:'+ Adicionar'},
+  ru:{search:'Поиск событий',ph:'напр. Наполеон, Битва',year:'Год / Диапазон лет',from:'От',to:'До',apply:'Применить',cats:'Категории',add:'+ Добавить'},
+  de:{search:'Ereignisse suchen',ph:'z.B. Napoleon, Schlacht',year:'Jahr / Jahresbereich',from:'Von',to:'Bis',apply:'Anwenden',cats:'Kategorien',add:'+ Hinzufügen'}
+};
+function applyLang(l){
+  var L=LABELS[l]||LABELS.en;
+  document.body.style.direction=l==='ar'?'rtl':'ltr';
+  document.getElementById('l-search').textContent=L.search;
+  document.getElementById('se').placeholder=L.ph;
+  document.getElementById('l-year').textContent=L.year;
+  document.getElementById('yf').placeholder=L.from;
+  document.getElementById('yt2').placeholder=L.to;
+  document.getElementById('ya').textContent=L.apply;
+  document.getElementById('l-cats').textContent=L.cats;
+  document.getElementById('ab').textContent=L.add;
+}
+document.getElementById('ls').addEventListener('change',function(){applyLang(this.value);});
+
+// ── ADD EVENT
+document.getElementById('ab').addEventListener('click',function(){document.getElementById('ap').classList.toggle('show');});
+document.getElementById('apc').addEventListener('click',function(){document.getElementById('ap').classList.remove('show');});
+document.getElementById('svb').addEventListener('click',function(){
+  var ti=document.getElementById('c-title').value.trim();
+  var yr=parseInt(document.getElementById('c-year').value);
+  var co=document.getElementById('c-country').value.trim();
+  var la=parseFloat(document.getElementById('c-lat').value);
+  var lo=parseFloat(document.getElementById('c-lon').value);
+  var ca=document.getElementById('c-cat').value;
+  var de=document.getElementById('c-desc').value.trim();
+  if(!ti||isNaN(yr)||!co||isNaN(la)||isNaN(lo)||!de){alert('Please fill all fields.');return;}
+  uEv.push({y:yr,la:la,lo:lo,t:ti,co:co,d:de,c:ca});
+  try{localStorage.setItem('mth_u',JSON.stringify(uEv));}catch(e){}
+  document.getElementById('sm').style.display='block';
+  setTimeout(function(){document.getElementById('sm').style.display='none';},2500);
+  ['c-title','c-year','c-country','c-lat','c-lon','c-desc'].forEach(function(id){document.getElementById(id).value='';});
+  buildMk();
+});
+
+// ── ANIMATION
+function loop(){
+  requestAnimationFrame(loop);
+  pt+=0.02;
+  if(autoR)trY+=0.001;
+  rX+=(trX-rX)*0.07;rY+=(trY-rY)*0.07;
+  glob.rotation.x=rX;glob.rotation.y=rY;
+  cam.position.z+=(zoom-cam.position.z)*0.07;
+  for(var i=0;i<mks.length;i++){mks[i].scale.setScalar(1+0.18*Math.sin(pt+i*1.3));}
+  renderer.render(scene,cam);
+}
+loop();
+
+window.addEventListener('resize',function(){
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  cam.aspect=window.innerWidth/window.innerHeight;
+  cam.updateProjectionMatrix();
+});
+updC();
+</script>
+</body>
+</html>
