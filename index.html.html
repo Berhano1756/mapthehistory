@@ -118,15 +118,15 @@ body{background:#0d1117;width:100vw;height:100vh;overflow:hidden;font-family:'Se
   <div><div id="logo"><b>Map</b>TheHistory</div><div id="tag">Interactive Historical Atlas</div></div>
   <select id="ls">
     <option value="en">English</option>
-    <option value="zh">中文</option>
-    <option value="hi">हिन्दी</option>
-    <option value="es">Español</option>
-    <option value="ar">العربية</option>
     <option value="tr">Türkçe</option>
+    <option value="zh">中文</option>
+    <option value="es">Español</option>
     <option value="fr">Français</option>
-    <option value="pt">Português</option>
-    <option value="ru">Русский</option>
     <option value="de">Deutsch</option>
+    <option value="ru">Русский</option>
+    <option value="pt">Português</option>
+    <option value="hi">हिन्दी</option>
+    <option value="ar">العربية</option>
   </select>
 </div>
 
@@ -600,7 +600,7 @@ function updC(){
 // ── MAPBOX GL MAP
 var map=new mapboxgl.Map({
   container:'map',
-  style:'mapbox://styles/mapbox/outdoors-v12',
+  style:'mapbox://styles/mapbox/streets-v12',
   projection:'globe',
   zoom:1.8,
   center:[20,30],
@@ -613,11 +613,11 @@ map.addControl(new mapboxgl.NavigationControl({showCompass:false}),'top-right');
 // Add atmosphere on globe
 map.on('style.load',function(){
   map.setFog({
-    color:'rgb(180,200,230)',
-    'high-color':'rgb(80,120,200)',
-    'horizon-blend':0.05,
-    'space-color':'rgb(10,15,28)',
-    'star-intensity':0.6
+    color:'rgb(186,210,235)',
+    'high-color':'rgb(80,130,210)',
+    'horizon-blend':0.04,
+    'space-color':'rgb(9,13,24)',
+    'star-intensity':0.5
   });
   buildMarkers();
 });
@@ -747,44 +747,7 @@ seEl.addEventListener('input',function(){
 document.addEventListener('click',function(e){if(!e.target.closest('.box'))srEl.style.display='none';});
 
 // ── LANGUAGE
-var LABELS={
-  en:{search:'Search Events & People',ph:'e.g. Napoleon, Battle...',year:'Year / Year Range',from:'From e.g. -480',to:'To e.g. 1945',apply:'Apply',cats:'Categories',add:'+ Add Event'},
-  zh:{search:'搜索事件和人物',ph:'例如：拿破仑，战役',year:'年份/年份范围',from:'从',to:'到',apply:'应用',cats:'类别',add:'+ 添加事件'},
-  hi:{search:'घटनाएं खोजें',ph:'जैसे नेपोलियन, युद्ध',year:'वर्ष / वर्ष सीमा',from:'से',to:'तक',apply:'लागू करें',cats:'श्रेणियां',add:'+ जोड़ें'},
-  es:{search:'Buscar eventos y personas',ph:'ej. Napoleón, Batalla',year:'Año / Rango de años',from:'Desde',to:'Hasta',apply:'Aplicar',cats:'Categorías',add:'+ Agregar evento'},
-  ar:{search:'البحث عن الأحداث',ph:'مثل نابليون، معركة',year:'السنة / نطاق السنوات',from:'من',to:'إلى',apply:'تطبيق',cats:'الفئات',add:'+ إضافة حدث'},
-  tr:{search:'Olay ve Kişi Ara',ph:'örn. Napolyon, Savaş',year:'Yıl / Yıl Aralığı',from:'Başlangıç',to:'Bitiş',apply:'Uygula',cats:'Kategoriler',add:'+ Olay Ekle'},
-  fr:{search:'Rechercher événements',ph:'ex. Napoléon, Bataille',year:"Année / Plage d'années",from:'De',to:'À',apply:'Appliquer',cats:'Catégories',add:'+ Ajouter'},
-  pt:{search:'Pesquisar eventos',ph:'ex. Napoleão, Batalha',year:'Ano / Intervalo',from:'De',to:'Até',apply:'Aplicar',cats:'Categorias',add:'+ Adicionar'},
-  ru:{search:'Поиск событий',ph:'напр. Наполеон, Битва',year:'Год / Диапазон лет',from:'От',to:'До',apply:'Применить',cats:'Категории',add:'+ Добавить'},
-  de:{search:'Ereignisse suchen',ph:'z.B. Napoleon, Schlacht',year:'Jahr / Jahresbereich',from:'Von',to:'Bis',apply:'Anwenden',cats:'Kategorien',add:'+ Hinzufügen'}
-};
-function applyLang(l){
-  var L=LABELS[l]||LABELS.en;
-  // RTL only for Arabic
-  document.body.style.direction=l==='ar'?'rtl':'ltr';
-  // Search box
-  var lsearch=document.getElementById('l-search');
-  if(lsearch) lsearch.textContent=L.search;
-  var se=document.getElementById('se');
-  if(se) se.placeholder=L.ph;
-  // Year box
-  var lyear=document.getElementById('l-year');
-  if(lyear) lyear.textContent=L.year;
-  var yf=document.getElementById('yf');
-  if(yf) yf.placeholder=L.from;
-  var yt2=document.getElementById('yt2');
-  if(yt2) yt2.placeholder=L.to;
-  var ya=document.getElementById('ya');
-  if(ya) ya.textContent=L.apply;
-  // Categories label
-  var lcats=document.getElementById('l-cats');
-  if(lcats) lcats.textContent=L.cats;
-  // Add event button
-  var ab=document.getElementById('ab');
-  if(ab) ab.textContent=L.add;
-}
-document.getElementById('ls').addEventListener('change',function(){applyLang(this.value);});
+
 
 // ── ADD EVENT
 document.getElementById('ab').addEventListener('click',function(){document.getElementById('ap').classList.toggle('show');});
