@@ -761,52 +761,28 @@ var LABELS={
 };
 function applyLang(l){
   var L=LABELS[l]||LABELS.en;
+  // RTL only for Arabic
   document.body.style.direction=l==='ar'?'rtl':'ltr';
-  document.getElementById('l-search').textContent=L.search;
-  document.getElementById('se').placeholder=L.ph;
-  document.getElementById('l-year').textContent=L.year;
-  document.getElementById('yf').placeholder=L.from;
-  document.getElementById('yt2').placeholder=L.to;
-  document.getElementById('ya').textContent=L.apply;
-  document.getElementById('l-cats').textContent=L.cats;
-  document.getElementById('ab').textContent=L.add;
-  // Translate category names
-  var catNames={
-    war:   {en:'War',zh:'战争',hi:'युद्ध',es:'Guerra',ar:'حرب',tr:'Savaş',fr:'Guerre',pt:'Guerra',ru:'Война',de:'Krieg'},
-    politics:{en:'Politics',zh:'政治',hi:'राजनीति',es:'Política',ar:'سياسة',tr:'Siyaset',fr:'Politique',pt:'Política',ru:'Политика',de:'Politik'},
-    science: {en:'Science',zh:'科学',hi:'विज्ञान',es:'Ciencia',ar:'علوم',tr:'Bilim',fr:'Science',pt:'Ciência',ru:'Наука',de:'Wissenschaft'},
-    culture: {en:'Culture',zh:'文化',hi:'संस्कृति',es:'Cultura',ar:'ثقافة',tr:'Kültür',fr:'Culture',pt:'Cultura',ru:'Культура',de:'Kultur'},
-    disaster:{en:'Disaster',zh:'灾难',hi:'आपदा',es:'Desastre',ar:'كارثة',tr:'Felaket',fr:'Catastrophe',pt:'Desastre',ru:'Катастрофа',de:'Katastrophe'},
-    exploration:{en:'Exploration',zh:'探索',hi:'अन्वेषण',es:'Exploración',ar:'استكشاف',tr:'Keşif',fr:'Exploration',pt:'Exploração',ru:'Исследование',de:'Entdeckung'},
-    economy:{en:'Economy',zh:'经济',hi:'अर्थव्यवस्था',es:'Economía',ar:'اقتصاد',tr:'Ekonomi',fr:'Économie',pt:'Economia',ru:'Экономика',de:'Wirtschaft'}
-  };
-  document.querySelectorAll('.fb .cl').forEach(function(el){
-    var cat=el.closest('.fb').dataset.c;
-    if(catNames[cat]&&catNames[cat][l]) el.textContent=catNames[cat][l];
-    else if(catNames[cat]) el.textContent=catNames[cat].en;
-  });
-  // Translate event panel labels if open
-  document.getElementById('hint').textContent=
-    l==='tr'?'sürükle · kaydır · olaylara tıkla':
-    l==='ar'?'اسحب للتدوير · التمرير للتكبير · انقر':
-    l==='zh'?'拖动旋转 · 滚动缩放 · 点击事件':
-    l==='es'?'arrastrar · desplazar · hacer clic':
-    l==='fr'?'faire glisser · défiler · cliquer':
-    l==='de'?'ziehen · scrollen · klicken':
-    l==='ru'?'перетащить · прокрутить · нажать':
-    l==='hi'?'खींचें · स्क्रॉल · क्लिक करें':
-    l==='pt'?'arrastar · rolar · clicar':
-    'drag to rotate · scroll to zoom · click markers';
-  // Translate logo
-  var logoNames={en:'<b>Map</b>TheHistory',tr:'<b>Harita</b> Tarihi',zh:'<b>地图</b>历史',hi:'<b>मानचित्र</b> इतिहास',es:'<b>Mapa</b>LaHistoria',ar:'<b>خريطة</b> التاريخ',fr:'<b>Carte</b>Histoire',pt:'<b>Mapa</b>História',ru:'<b>Карта</b>Истории',de:'<b>Karte</b>Geschichte'};
-  var tagNames={en:'Interactive Historical Atlas',tr:'İnteraktif Tarih Atlası',zh:'互动历史地图集',hi:'इंटरैक्टिव ऐतिहासिक एटलस',es:'Atlas Histórico Interactivo',ar:'أطلس تاريخي تفاعلي',fr:'Atlas Historique Interactif',pt:'Atlas Histórico Interativo',ru:'Интерактивный исторический атлас',de:'Interaktiver Historischer Atlas'};
-  document.getElementById('logo').innerHTML=logoNames[l]||logoNames.en;
-  document.getElementById('tag').textContent=tagNames[l]||tagNames.en;
-  // Translate event panel button labels
-  var wikiL={en:'📖 Wikipedia',tr:'📖 Vikipedi',ar:'📖 ويكيبيديا',zh:'📖 维基百科',hi:'📖 विकिपीडिया',es:'📖 Wikipedia',fr:'📖 Wikipédia',pt:'📖 Wikipédia',ru:'📖 Википедия',de:'📖 Wikipedia'};
-  var mapsL={en:'🗺 Maps',tr:'🗺 Haritalar',ar:'🗺 خرائط',zh:'🗺 地图',hi:'🗺 मानचित्र',es:'🗺 Mapas',fr:'🗺 Cartes',pt:'🗺 Mapas',ru:'🗺 Карты',de:'🗺 Karten'};
-  document.getElementById('ewl').textContent=wikiL[l]||wikiL.en;
-  document.getElementById('eml').textContent=mapsL[l]||mapsL.en;
+  // Search box
+  var lsearch=document.getElementById('l-search');
+  if(lsearch) lsearch.textContent=L.search;
+  var se=document.getElementById('se');
+  if(se) se.placeholder=L.ph;
+  // Year box
+  var lyear=document.getElementById('l-year');
+  if(lyear) lyear.textContent=L.year;
+  var yf=document.getElementById('yf');
+  if(yf) yf.placeholder=L.from;
+  var yt2=document.getElementById('yt2');
+  if(yt2) yt2.placeholder=L.to;
+  var ya=document.getElementById('ya');
+  if(ya) ya.textContent=L.apply;
+  // Categories label
+  var lcats=document.getElementById('l-cats');
+  if(lcats) lcats.textContent=L.cats;
+  // Add event button
+  var ab=document.getElementById('ab');
+  if(ab) ab.textContent=L.add;
 }
 document.getElementById('ls').addEventListener('change',function(){applyLang(this.value);});
 
