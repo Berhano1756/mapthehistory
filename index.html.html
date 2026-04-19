@@ -106,8 +106,8 @@ body{background:#0d1117;width:100vw;height:100vh;overflow:hidden;font-family:'Se
 #hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:100;font-size:9px;color:#1a2535;letter-spacing:2px;text-transform:uppercase;pointer-events:none}
 
 /* Custom marker */
-.mkr{width:12px;height:12px;border-radius:50%;cursor:pointer;border:2px solid rgba(255,255,255,.4);box-shadow:0 0 6px currentColor}
-.mkr:hover{box-shadow:0 0 14px currentColor;border-color:rgba(255,255,255,.8)}
+.mkr{width:13px;height:13px;border-radius:50%;cursor:pointer;border:2px solid rgba(255,255,255,.35);box-shadow:0 0 7px currentColor}
+.mkr:hover{border-color:rgba(255,255,255,.9);box-shadow:0 0 16px currentColor}
 </style>
 </head>
 <body>
@@ -613,11 +613,11 @@ map.addControl(new mapboxgl.NavigationControl({showCompass:false}),'top-right');
 // Add atmosphere on globe
 map.on('style.load',function(){
   map.setFog({
-    color:'rgb(160,180,210)',
-    'high-color':'rgb(60,100,180)',
-    'horizon-blend':0.04,
-    'space-color':'rgb(8,12,22)',
-    'star-intensity':0.5
+    color:'rgb(180,200,230)',
+    'high-color':'rgb(80,120,200)',
+    'horizon-blend':0.05,
+    'space-color':'rgb(10,15,28)',
+    'star-intensity':0.6
   });
   buildMarkers();
 });
@@ -797,6 +797,16 @@ function applyLang(l){
     l==='hi'?'खींचें · स्क्रॉल · क्लिक करें':
     l==='pt'?'arrastar · rolar · clicar':
     'drag to rotate · scroll to zoom · click markers';
+  // Translate logo
+  var logoNames={en:'<b>Map</b>TheHistory',tr:'<b>Harita</b> Tarihi',zh:'<b>地图</b>历史',hi:'<b>मानचित्र</b> इतिहास',es:'<b>Mapa</b>LaHistoria',ar:'<b>خريطة</b> التاريخ',fr:'<b>Carte</b>Histoire',pt:'<b>Mapa</b>História',ru:'<b>Карта</b>Истории',de:'<b>Karte</b>Geschichte'};
+  var tagNames={en:'Interactive Historical Atlas',tr:'İnteraktif Tarih Atlası',zh:'互动历史地图集',hi:'इंटरैक्टिव ऐतिहासिक एटलस',es:'Atlas Histórico Interactivo',ar:'أطلس تاريخي تفاعلي',fr:'Atlas Historique Interactif',pt:'Atlas Histórico Interativo',ru:'Интерактивный исторический атлас',de:'Interaktiver Historischer Atlas'};
+  document.getElementById('logo').innerHTML=logoNames[l]||logoNames.en;
+  document.getElementById('tag').textContent=tagNames[l]||tagNames.en;
+  // Translate event panel button labels
+  var wikiL={en:'📖 Wikipedia',tr:'📖 Vikipedi',ar:'📖 ويكيبيديا',zh:'📖 维基百科',hi:'📖 विकिपीडिया',es:'📖 Wikipedia',fr:'📖 Wikipédia',pt:'📖 Wikipédia',ru:'📖 Википедия',de:'📖 Wikipedia'};
+  var mapsL={en:'🗺 Maps',tr:'🗺 Haritalar',ar:'🗺 خرائط',zh:'🗺 地图',hi:'🗺 मानचित्र',es:'🗺 Mapas',fr:'🗺 Cartes',pt:'🗺 Mapas',ru:'🗺 Карты',de:'🗺 Karten'};
+  document.getElementById('ewl').textContent=wikiL[l]||wikiL.en;
+  document.getElementById('eml').textContent=mapsL[l]||mapsL.en;
 }
 document.getElementById('ls').addEventListener('change',function(){applyLang(this.value);});
 
