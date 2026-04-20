@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Mapbox Test</title>
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
+<style>*{margin:0;padding:0}#map{width:100vw;height:100vh}</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="msg" style="position:fixed;top:10px;left:10px;background:rgba(0,0,0,0.8);color:white;padding:10px;font-family:Arial;font-size:14px;z-index:999">Loading...</div>
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+<script>
+mapboxgl.accessToken = 'pk.eyJ1IjoiYmVyaGFubyIsImEiOiJjbW82ZG1wbG4xcXN5MnJzZWNiMW11bWlmIn0.xJpVh4XJUEq2JRq2e1MrKA';
+var map = new mapboxgl.Map({
+  container: 'map',
+  style: 'mapbox://styles/mapbox/outdoors-v12',
+  center: [20, 30],
+  zoom: 2
+});
+map.on('load', function() {
+  document.getElementById('msg').textContent = '✅ Mapbox works! Token OK';
+  document.getElementById('msg').style.background = 'rgba(0,100,0,0.8)';
+});
+map.on('error', function(e) {
+  document.getElementById('msg').textContent = '❌ Error: ' + e.error.message;
+  document.getElementById('msg').style.background = 'rgba(150,0,0,0.8)';
+});
+</script>
+</body>
+</html>
