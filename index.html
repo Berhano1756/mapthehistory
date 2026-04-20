@@ -3,25 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MapTheHistory</title>
+<title>MapTheHistory — Interactive Historical Atlas</title>
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0d1117;overflow:hidden;width:100vw;height:100vh;font-family:'Segoe UI',Arial,sans-serif;color:#c9d1d9}
-canvas{position:absolute;top:0;left:0}
+body{background:#0d1117;width:100vw;height:100vh;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;color:#c9d1d9}
+#map{position:absolute;inset:0;width:100%;height:100%}
+
+/* Globe projection fix */
+.mapboxgl-canvas{outline:none}
+.mapboxgl-ctrl-attrib{display:none!important}
+.mapboxgl-ctrl-logo{display:none!important}
+
 /* HEADER */
-#hdr{position:absolute;top:0;left:0;right:0;z-index:10;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(13,17,23,.97) 70%,transparent)}
-#logo{font-size:18px;letter-spacing:4px;color:#e8b84b;text-transform:uppercase;font-weight:300}
+#hdr{position:absolute;top:0;left:0;right:0;z-index:100;padding:11px 20px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(13,17,23,.97) 70%,transparent);pointer-events:none}
+#hdr>*{pointer-events:auto}
+#logo{font-size:22px;letter-spacing:4px;color:#e8b84b;text-transform:uppercase;font-weight:300}
 #logo b{color:#f0d060;font-weight:600}
 #tag{font-size:9px;color:#3a4050;letter-spacing:2px;text-transform:uppercase;margin-top:2px}
 #ls{background:rgba(13,17,23,.9);border:1px solid #30363d;color:#8b949e;padding:5px 9px;font-size:11px;cursor:pointer;outline:none;border-radius:4px}
+
 /* LEFT PANEL */
-#lp{position:absolute;top:56px;left:16px;z-index:10;width:215px;display:flex;flex-direction:column;gap:7px}
+#lp{position:absolute;top:56px;left:16px;z-index:100;width:240px;display:flex;flex-direction:column;gap:7px}
 .box{background:rgba(10,14,22,.93);border:1px solid #1e2535;border-radius:6px;padding:10px 12px}
-.bl{display:block;font-size:9px;color:#e8b84b;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;font-weight:600}
+.bl{display:block;font-size:11px;color:#e8b84b;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;font-weight:600}
 .box input{width:100%;background:rgba(255,255,255,.04);border:1px solid #1e2535;color:#c9d1d9;padding:6px 8px;font-size:12px;border-radius:4px;outline:none}
 .box input:focus{border-color:#e8b84b}
 .box input::placeholder{color:#2e3850}
 #sr{max-height:145px;overflow-y:auto;margin-top:6px;display:none}
+#sr::-webkit-scrollbar{width:3px}
+#sr::-webkit-scrollbar-thumb{background:#1e2535}
 .si{padding:6px 8px;font-size:11px;color:#8b949e;cursor:pointer;border-radius:3px;border-bottom:1px solid #0d1117}
 .si:hover{background:rgba(232,184,75,.08);color:#e8b84b}
 .si strong{color:#e6edf3;display:block;font-size:12px}
@@ -31,23 +42,25 @@ canvas{position:absolute;top:0;left:0}
 .yr span{color:#2e3850;font-size:11px}
 #ya{width:100%;margin-top:6px;background:rgba(232,184,75,.12);border:1px solid rgba(232,184,75,.3);color:#e8b84b;padding:6px;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:4px;font-weight:600}
 #ya:hover{background:rgba(232,184,75,.2)}
-.fb{display:flex;align-items:center;gap:7px;padding:4px 5px;cursor:pointer;font-size:11px;border-radius:4px;color:#3a4560;transition:all .15s;user-select:none}
+.fb{display:flex;align-items:center;gap:7px;padding:5px 6px;cursor:pointer;font-size:13px;border-radius:4px;color:#3a4560;transition:all .15s;user-select:none}
 .fb:hover{background:rgba(255,255,255,.03)}
 .fb.on{color:#8b949e}
 .fd{width:8px;height:8px;border-radius:50%;flex-shrink:0;opacity:.4}
 .fb.on .fd{opacity:1}
 .fc{margin-left:auto;font-size:10px;color:#2e3850}
+
 /* YEAR PANEL */
-#yp{position:absolute;right:18px;top:50%;transform:translateY(-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:8px}
-#yd{font-size:30px;color:#e8b84b;letter-spacing:2px;min-width:85px;text-align:center;font-weight:300}
+#yp{position:absolute;right:18px;top:50%;transform:translateY(-50%);z-index:100;display:flex;flex-direction:column;align-items:center;gap:8px}
+#yd{font-size:30px;color:#e8b84b;letter-spacing:2px;min-width:85px;text-align:center;font-weight:300;text-shadow:0 0 20px rgba(232,184,75,.3)}
 #ye{font-size:9px;color:#2e3850;letter-spacing:2px;text-transform:uppercase;text-align:center;min-height:13px}
 #ys{-webkit-appearance:none;appearance:none;writing-mode:vertical-lr;direction:rtl;width:3px;height:300px;background:rgba(30,37,53,.9);border-radius:2px;outline:none;cursor:pointer}
 #ys::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#e8b84b;cursor:pointer;box-shadow:0 0 8px rgba(232,184,75,.5)}
 .yt{font-size:9px;color:#1e2535}
-#ec{position:absolute;top:56px;right:56px;z-index:10;font-size:10px;color:#2e3850;text-align:right}
+#ec{position:absolute;top:56px;right:56px;z-index:100;font-size:10px;color:#2e3850;text-align:right}
 #ec span{color:#e8b84b}
+
 /* EVENT PANEL */
-#ep{position:absolute;right:0;top:0;bottom:0;z-index:10;width:340px;background:rgba(10,14,22,.97);border-left:1px solid #1e2535;display:none;flex-direction:column;overflow:hidden}
+#ep{position:absolute;right:0;top:0;bottom:0;z-index:100;width:340px;background:rgba(10,14,22,.97);border-left:1px solid #1e2535;display:none;flex-direction:column;overflow:hidden}
 #ep.show{display:flex}
 #ecl{position:absolute;top:12px;right:12px;z-index:5;color:#484f58;cursor:pointer;font-size:16px;background:rgba(16,22,36,.95);border:1px solid #1e2535;border-radius:4px;width:28px;height:28px;display:flex;align-items:center;justify-content:center}
 #ecl:hover{color:#e8b84b;border-color:rgba(232,184,75,.4)}
@@ -73,10 +86,11 @@ canvas{position:absolute;top:0;left:0}
 .cd{background:rgba(255,123,0,.15);color:#ff7b00;border:1px solid rgba(255,123,0,.3)}
 .ce{background:rgba(188,140,228,.15);color:#bc8ce4;border:1px solid rgba(188,140,228,.3)}
 .ck{background:rgba(41,174,218,.15);color:#29aedb;border:1px solid rgba(41,174,218,.3)}
-/* ADD PANEL */
-#ab{position:absolute;bottom:18px;left:240px;z-index:10;background:rgba(10,14,22,.9);border:1px solid #1e2535;color:#8b949e;padding:7px 13px;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:4px}
+
+/* ADD */
+#ab{position:absolute;bottom:18px;left:240px;z-index:100;background:rgba(10,14,22,.9);border:1px solid #1e2535;color:#8b949e;padding:7px 13px;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:4px}
 #ab:hover{border-color:#e8b84b;color:#e8b84b}
-#ap{position:absolute;bottom:55px;left:240px;z-index:10;width:262px;background:rgba(10,14,22,.97);border:1px solid #1e2535;border-radius:6px;padding:14px;display:none}
+#ap{position:absolute;bottom:55px;left:240px;z-index:100;width:262px;background:rgba(10,14,22,.97);border:1px solid #1e2535;border-radius:6px;padding:14px;display:none}
 #ap.show{display:block}
 #ap h3{font-size:10px;letter-spacing:1.5px;color:#e8b84b;text-transform:uppercase;margin-bottom:11px;font-weight:600}
 .fg{margin-bottom:7px}
@@ -89,25 +103,30 @@ canvas{position:absolute;top:0;left:0}
 #svb:hover{background:rgba(232,184,75,.22)}
 #apc{position:absolute;top:10px;right:10px;color:#484f58;cursor:pointer;font-size:13px;background:none;border:none}
 #sm{font-size:10px;color:#3fb950;text-align:center;margin-top:5px;display:none}
-#hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:10;font-size:9px;color:#0e1520;letter-spacing:2px;text-transform:uppercase;pointer-events:none}
+#hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:100;font-size:9px;color:#1a2535;letter-spacing:2px;text-transform:uppercase;pointer-events:none}
+
+/* Custom marker */
+.mkr{width:13px;height:13px;border-radius:50%;cursor:pointer;border:2px solid rgba(255,255,255,.35);box-shadow:0 0 7px currentColor}
+.mkr:hover{border-color:rgba(255,255,255,.9);box-shadow:0 0 16px currentColor}
 </style>
 </head>
 <body>
-<canvas id="c"></canvas>
+
+<div id="map"></div>
 
 <div id="hdr">
   <div><div id="logo"><b>Map</b>TheHistory</div><div id="tag">Interactive Historical Atlas</div></div>
   <select id="ls">
     <option value="en">English</option>
-    <option value="zh">中文</option>
-    <option value="hi">हिन्दी</option>
-    <option value="es">Español</option>
-    <option value="ar">العربية</option>
     <option value="tr">Türkçe</option>
+    <option value="zh">中文</option>
+    <option value="es">Español</option>
     <option value="fr">Français</option>
-    <option value="pt">Português</option>
-    <option value="ru">Русский</option>
     <option value="de">Deutsch</option>
+    <option value="ru">Русский</option>
+    <option value="pt">Português</option>
+    <option value="hi">हिन्दी</option>
+    <option value="ar">العربية</option>
   </select>
 </div>
 
@@ -187,107 +206,382 @@ canvas{position:absolute;top:0;left:0}
   <div id="sm">Saved!</div>
 </div>
 
-<div id="hint">drag to rotate · scroll to zoom · click events</div>
+<div id="hint">drag to rotate · scroll to zoom · click markers</div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
 <script>
-// ── DATA
-const CC={war:'#f85149',politics:'#388bfd',science:'#3fb950',culture:'#d2933a',disaster:'#ff7b00',exploration:'#bc8ce4',economy:'#29aedb'};
-const CL={war:'cw',politics:'cp',science:'cs',culture:'cc',disaster:'cd',exploration:'ce',economy:'ck'};
-const DB=[
+var MB_TOKEN='pk.eyJ1IjoiYmVyaGFubyIsImEiOiJjbW83bG83amwwN3JzMnBzN3Jlc3hubWtoIn0.GmGhkWdw3cgoGgu_kby8zQ';
+mapboxgl.accessToken=MB_TOKEN;
+
+var CC={war:'#f85149',politics:'#388bfd',science:'#3fb950',culture:'#d2933a',disaster:'#ff7b00',exploration:'#bc8ce4',economy:'#29aedb'};
+var CL={war:'cw',politics:'cp',science:'cs',culture:'cc',disaster:'cd',exploration:'ce',economy:'ck'};
+
+var DB=[
+/* ── PREHISTORIC & ANCIENT (3100 BC – 500 AD) ── */
 {y:-3100,la:30.06,lo:31.25,t:"Unification of Egypt",co:"Egypt",d:"Pharaoh Narmer unites Upper and Lower Egypt, founding one of history's greatest civilizations.",c:"politics",w:"Narmer"},
-{y:-3000,la:32.54,lo:44.42,t:"Sumerian City-States",co:"Mesopotamia",d:"World's first cities — Ur, Uruk, Eridu — inventing writing, law, and organized religion.",c:"culture",w:"Sumer"},
+{y:-3000,la:32.54,lo:44.42,t:"Sumerian City-States",co:"Mesopotamia",d:"World's first cities emerge — Ur, Uruk, Eridu — inventing writing, law, and organized religion.",c:"culture",w:"Sumer"},
 {y:-2560,la:29.98,lo:31.13,t:"Great Pyramid of Giza",co:"Egypt",d:"Pharaoh Khufu's pyramid — the tallest man-made structure for 3,800 years.",c:"culture",w:"Great_Pyramid_of_Giza"},
-{y:-1274,la:36.5,lo:36.9,t:"Battle of Kadesh",co:"Syria",d:"World's first recorded major battle — Egypt vs the Hittites.",c:"war",w:"Battle_of_Kadesh"},
-{y:-776,la:37.64,lo:21.63,t:"First Olympic Games",co:"Greece",d:"The ancient Greeks hold the first Olympic Games at Olympia.",c:"culture",w:"Ancient_Olympic_Games"},
-{y:-753,la:41.9,lo:12.5,t:"Founding of Rome",co:"Italy",d:"Romulus founds Rome on the banks of the Tiber River.",c:"politics",w:"Founding_of_Rome"},
-{y:-551,la:35.6,lo:116.9,t:"Birth of Confucius",co:"China",d:"His philosophy shapes East Asian civilization for 2,500 years.",c:"culture",w:"Confucius"},
-{y:-490,la:38.1,lo:24.0,t:"Battle of Marathon",co:"Greece",d:"Athenian forces repel the Persian invasion.",c:"war",w:"Battle_of_Marathon"},
-{y:-480,la:38.9,lo:22.6,t:"Battle of Thermopylae",co:"Greece",d:"300 Spartans hold the vast Persian army in a legendary last stand.",c:"war",w:"Battle_of_Thermopylae"},
-{y:-334,la:41.0,lo:28.9,t:"Alexander the Great",co:"Greece",d:"Alexander creates an empire stretching from Greece to India.",c:"war",w:"Alexander_the_Great"},
-{y:-221,la:34.3,lo:108.9,t:"China Unified",co:"China",d:"Qin Shi Huang becomes the first emperor of unified China.",c:"politics",w:"Qin_dynasty"},
-{y:-44,la:41.9,lo:12.5,t:"Caesar Assassinated",co:"Rome",d:"Julius Caesar stabbed 23 times, triggering the fall of the Roman Republic.",c:"politics",w:"Assassination_of_Julius_Caesar"},
-{y:1,la:31.7,lo:35.2,t:"Birth of Jesus Christ",co:"Judea",d:"Birth of Jesus marks year zero of the Christian calendar.",c:"culture",w:"Jesus"},
-{y:79,la:40.82,lo:14.43,t:"Eruption of Vesuvius",co:"Roman Empire",d:"Vesuvius buries Pompeii, preserving a snapshot of Roman life.",c:"disaster",w:"Eruption_of_Mount_Vesuvius_in_79_AD"},
+{y:-2350,la:33.1,lo:44.4,t:"Akkadian Empire",co:"Mesopotamia",d:"Sargon of Akkad creates the world's first empire, ruling Mesopotamia.",c:"politics",w:"Akkadian_Empire"},
+{y:-1750,la:32.5,lo:44.4,t:"Code of Hammurabi",co:"Babylon",d:"282 laws carved in stone — one of history's earliest comprehensive legal codes.",c:"politics",w:"Code_of_Hammurabi"},
+{y:-1274,la:36.5,lo:36.9,t:"Battle of Kadesh",co:"Syria",d:"World's first recorded major battle — Egypt vs the Hittites. Ends in history's first peace treaty.",c:"war",w:"Battle_of_Kadesh"},
+{y:-1200,la:37.9,lo:23.7,t:"Bronze Age Collapse",co:"Greece",d:"A mysterious catastrophe destroys civilizations across the Eastern Mediterranean simultaneously.",c:"disaster",w:"Late_Bronze_Age_collapse"},
+{y:-1000,la:31.8,lo:35.2,t:"Kingdom of Israel Founded",co:"Israel",d:"King David establishes Jerusalem as capital of the united Kingdom of Israel.",c:"politics",w:"Kingdom_of_Israel_(united_monarchy)"},
+{y:-776,la:37.64,lo:21.63,t:"First Olympic Games",co:"Greece",d:"The ancient Greeks hold the first Olympic Games at Olympia, beginning a tradition lasting over a millennium.",c:"culture",w:"Ancient_Olympic_Games"},
+{y:-753,la:41.9,lo:12.5,t:"Founding of Rome",co:"Italy",d:"Romulus founds Rome on the banks of the Tiber River, planting the seed of an empire.",c:"politics",w:"Founding_of_Rome"},
+{y:-700,la:36.3,lo:43.1,t:"Assyrian Empire at Peak",co:"Iraq",d:"The Neo-Assyrian Empire becomes the most powerful in the ancient world, conquering Egypt.",c:"war",w:"Neo-Assyrian_Empire"},
+{y:-600,la:32.5,lo:44.4,t:"Babylon at its Height",co:"Iraq",d:"Nebuchadnezzar II builds the Hanging Gardens and destroys Jerusalem.",c:"culture",w:"Nebuchadnezzar_II"},
+{y:-563,la:27.6,lo:83.4,t:"Birth of the Buddha",co:"Nepal",d:"Siddhartha Gautama is born — his teachings give rise to one of the world's great religions.",c:"culture",w:"Gautama_Buddha"},
+{y:-551,la:35.6,lo:116.9,t:"Birth of Confucius",co:"China",d:"His philosophy of ethics and social harmony shapes East Asian civilization for 2,500 years.",c:"culture",w:"Confucius"},
+{y:-509,la:41.9,lo:12.5,t:"Roman Republic Founded",co:"Rome",d:"Romans expel their king and establish a republic, pioneering democratic governance.",c:"politics",w:"Roman_Republic"},
+{y:-490,la:38.1,lo:24.0,t:"Battle of Marathon",co:"Greece",d:"Athenian forces repel the Persian invasion. A messenger runs 26 miles to announce victory.",c:"war",w:"Battle_of_Marathon"},
+{y:-480,la:38.9,lo:22.6,t:"Battle of Thermopylae",co:"Greece",d:"300 Spartans under King Leonidas hold the vast Persian army in a legendary last stand.",c:"war",w:"Battle_of_Thermopylae"},
+{y:-479,la:38.4,lo:23.3,t:"Battle of Plataea",co:"Greece",d:"Greek city-states decisively defeat Persia's army, ending the Persian invasion of Greece.",c:"war",w:"Battle_of_Plataea"},
+{y:-470,la:37.97,lo:23.73,t:"Golden Age of Athens",co:"Greece",d:"The Parthenon is built, democracy flourishes, and philosophy thrives under Pericles.",c:"culture",w:"Classical_Athens"},
+{y:-460,la:37.97,lo:23.73,t:"Birth of Hippocrates",co:"Greece",d:"Father of medicine born. His principles still guide medical ethics today.",c:"science",w:"Hippocrates"},
+{y:-431,la:37.97,lo:23.73,t:"Peloponnesian War",co:"Greece",d:"Athens and Sparta clash in a devastating 27-year war that weakens all of Greece.",c:"war",w:"Peloponnesian_War"},
+{y:-399,la:37.97,lo:23.73,t:"Death of Socrates",co:"Greece",d:"The philosopher Socrates is sentenced to death by Athens, drinking hemlock.",c:"culture",w:"Socrates"},
+{y:-356,la:40.6,lo:22.9,t:"Birth of Alexander the Great",co:"Greece",d:"Alexander is born in Macedonia — he will conquer half the known world by age 30.",c:"war",w:"Alexander_the_Great"},
+{y:-334,la:41.0,lo:28.9,t:"Alexander's Conquest",co:"Greece",d:"Alexander creates an empire stretching from Greece to India, spreading Greek culture worldwide.",c:"war",w:"Alexander_the_Great"},
+{y:-323,la:31.2,lo:29.9,t:"Death of Alexander",co:"Egypt",d:"Alexander dies in Babylon aged 32. His vast empire immediately fractures.",c:"politics",w:"Death_of_Alexander_the_Great"},
+{y:-264,la:37.5,lo:15.1,t:"First Punic War",co:"Sicily",d:"Rome and Carthage clash for control of Sicily, the first of three wars for Mediterranean supremacy.",c:"war",w:"First_Punic_War"},
+{y:-221,la:34.3,lo:108.9,t:"China Unified",co:"China",d:"Qin Shi Huang becomes the first emperor of unified China, standardizing currency and writing.",c:"politics",w:"Qin_dynasty"},
+{y:-218,la:44.0,lo:7.0,t:"Hannibal Crosses the Alps",co:"Italy",d:"Hannibal leads his army and war elephants over the Alps to attack Rome from the north.",c:"war",w:"Hannibal"},
+{y:-214,la:40.4,lo:116.6,t:"Great Wall Construction",co:"China",d:"Emperor Qin orders fortifications along China's northern frontier against nomadic invaders.",c:"culture",w:"Great_Wall_of_China"},
+{y:-149,la:36.85,lo:10.32,t:"Third Punic War",co:"Carthage",d:"Rome besieges and destroys Carthage, ending Carthaginian civilization forever.",c:"war",w:"Third_Punic_War"},
+{y:-105,la:34.3,lo:108.9,t:"Silk Road Opens",co:"China",d:"Han Dynasty Emperor Wu establishes trade routes to the West, connecting civilizations.",c:"economy",w:"Silk_Road"},
+{y:-73,la:41.0,lo:15.0,t:"Spartacus Revolt",co:"Italy",d:"The gladiator Spartacus leads the largest slave rebellion in Roman history.",c:"war",w:"Third_Servile_War"},
+{y:-55,la:51.5,lo:-0.1,t:"Caesar Invades Britain",co:"Britain",d:"Julius Caesar leads the first Roman military expedition to Britain.",c:"war",w:"Caesar%27s_invasions_of_Britain"},
+{y:-44,la:41.9,lo:12.5,t:"Caesar Assassinated",co:"Rome",d:"Julius Caesar stabbed 23 times in the Theatre of Pompey, triggering the fall of the Republic.",c:"politics",w:"Assassination_of_Julius_Caesar"},
+{y:-31,la:31.2,lo:29.9,t:"Battle of Actium",co:"Egypt",d:"Octavian defeats Mark Antony and Cleopatra, becoming Rome's first emperor Augustus.",c:"war",w:"Battle_of_Actium"},
+{y:1,la:31.7,lo:35.2,t:"Birth of Jesus Christ",co:"Judea",d:"Birth of Jesus of Nazareth marks year zero of the Christian calendar.",c:"culture",w:"Jesus"},
+{y:64,la:41.9,lo:12.5,t:"Great Fire of Rome",co:"Rome",d:"A catastrophic fire destroys much of Rome. Emperor Nero blamed Christians.",c:"disaster",w:"Great_Fire_of_Rome"},
+{y:79,la:40.82,lo:14.43,t:"Eruption of Vesuvius",co:"Roman Empire",d:"Vesuvius buries Pompeii under ash, preserving a remarkable snapshot of Roman life.",c:"disaster",w:"Eruption_of_Mount_Vesuvius_in_79_AD"},
 {y:105,la:34.3,lo:108.9,t:"Paper Invented",co:"China",d:"Cai Lun creates paper — one of history's most transformative inventions.",c:"science",w:"History_of_paper"},
-{y:476,la:41.9,lo:12.5,t:"Fall of Western Rome",co:"Italy",d:"The last Western Roman Emperor is deposed, ending the ancient world.",c:"politics",w:"Fall_of_the_Western_Roman_Empire"},
-{y:570,la:21.4,lo:39.8,t:"Birth of Muhammad",co:"Arabia",d:"The Prophet Muhammad born in Mecca — Islam will follow.",c:"culture",w:"Muhammad"},
-{y:800,la:48.8,lo:2.35,t:"Charlemagne Crowned Emperor",co:"France",d:"Charlemagne crowned Holy Roman Emperor, founding medieval Europe.",c:"politics",w:"Charlemagne"},
+{y:117,la:39.0,lo:35.0,t:"Roman Empire at Peak",co:"Rome",d:"Under Emperor Trajan, the Roman Empire reaches its greatest territorial extent.",c:"politics",w:"Trajan"},
+{y:313,la:41.0,lo:28.9,t:"Edict of Milan",co:"Roman Empire",d:"Emperor Constantine grants religious tolerance, transforming Christianity's role in the empire.",c:"politics",w:"Edict_of_Milan"},
+{y:370,la:48.5,lo:34.0,t:"Hunnic Invasion of Europe",co:"Ukraine",d:"The Huns sweep westward, pushing Germanic tribes into Roman territory.",c:"war",w:"Huns"},
+{y:410,la:41.9,lo:12.5,t:"Sack of Rome by Visigoths",co:"Italy",d:"Visigoth forces sack Rome for the first time in 800 years, shocking the ancient world.",c:"war",w:"Sack_of_Rome_(410)"},
+{y:476,la:41.9,lo:12.5,t:"Fall of Western Rome",co:"Italy",d:"The last Western Roman Emperor is deposed by Odoacer, ending the ancient world.",c:"politics",w:"Fall_of_the_Western_Roman_Empire"},
+/* ── EARLY MEDIEVAL (500–1000) ── */
+{y:527,la:41.0,lo:28.9,t:"Justinian's Byzantine Empire",co:"Byzantine Empire",d:"Emperor Justinian I expands the Byzantine Empire and codifies Roman law.",c:"politics",w:"Justinian_I"},
+{y:570,la:21.4,lo:39.8,t:"Birth of Muhammad",co:"Arabia",d:"The Prophet Muhammad born in Mecca — his teachings give rise to Islam.",c:"culture",w:"Muhammad"},
+{y:618,la:34.3,lo:108.9,t:"Tang Dynasty Founded",co:"China",d:"China's Tang Dynasty begins a golden age of art, culture and trade.",c:"culture",w:"Tang_dynasty"},
+{y:622,la:24.5,lo:39.6,t:"Hijra — Islamic Calendar",co:"Arabia",d:"Muhammad's migration to Medina marks year 1 of the Islamic calendar.",c:"culture",w:"Hijra"},
+{y:632,la:21.4,lo:39.8,t:"Death of Muhammad",co:"Arabia",d:"Muhammad dies, leaving a rapidly expanding Islamic empire.",c:"culture",w:"Muhammad"},
+{y:711,la:36.1,lo:-5.4,t:"Moors Invade Spain",co:"Spain",d:"Muslim forces cross from North Africa into Spain, beginning 700 years of Moorish rule.",c:"war",w:"Umayyad_conquest_of_Hispania"},
+{y:732,la:46.7,lo:0.2,t:"Battle of Tours",co:"France",d:"Charles Martel halts the northward advance of Islam into Europe.",c:"war",w:"Battle_of_Tours"},
+{y:793,la:55.6,lo:-1.9,t:"Viking Age Begins",co:"England",d:"Norse raiders attack Lindisfarne monastery, beginning centuries of Viking expansion.",c:"war",w:"Viking_Age"},
+{y:800,la:48.8,lo:2.35,t:"Charlemagne Crowned Emperor",co:"France",d:"Charlemagne crowned Holy Roman Emperor, founding the foundation of medieval Europe.",c:"politics",w:"Charlemagne"},
+{y:827,la:37.5,lo:13.0,t:"Arab Conquest of Sicily",co:"Sicily",d:"Arab forces begin the conquest of Sicily, creating a flourishing multicultural civilization.",c:"war",w:"Emirate_of_Sicily"},
+{y:860,la:59.9,lo:30.3,t:"Rurik Founds Russia",co:"Russia",d:"The Viking leader Rurik establishes the Rurik dynasty, founding the Russian state.",c:"politics",w:"Rurik"},
+{y:896,la:47.5,lo:19.0,t:"Magyars Settle Hungary",co:"Hungary",d:"Magyar tribes settle the Carpathian Basin, founding the Kingdom of Hungary.",c:"politics",w:"Hungarian_conquest_of_the_Carpathian_Basin"},
+{y:960,la:34.3,lo:108.9,t:"Song Dynasty Founded",co:"China",d:"Song Dynasty China pioneers gunpowder weapons, paper money, and the printing press.",c:"science",w:"Song_dynasty"},
+{y:980,la:64.0,lo:-22.0,t:"Erik the Red Settles Greenland",co:"Greenland",d:"Norse explorer Erik the Red establishes the first European settlement in Greenland.",c:"exploration",w:"Erik_the_Red"},
 {y:1000,la:51.1,lo:-56.5,t:"Norse Reach America",co:"Canada",d:"Leif Eriksson lands in Vinland — first Europeans in the Americas.",c:"exploration",w:"Leif_Erikson"},
-{y:1066,la:50.9,lo:0.58,t:"Battle of Hastings",co:"England",d:"William the Conqueror defeats Harold, reshaping England forever.",c:"war",w:"Battle_of_Hastings"},
-{y:1095,la:41.9,lo:12.5,t:"First Crusade",co:"Rome",d:"Pope Urban II calls for a holy war to recapture Jerusalem.",c:"war",w:"First_Crusade"},
-{y:1206,la:47.9,lo:106.9,t:"Mongol Empire Founded",co:"Mongolia",d:"Genghis Khan unites Mongol tribes, founding history's largest land empire.",c:"politics",w:"Mongol_Empire"},
-{y:1215,la:51.4,lo:-0.57,t:"Magna Carta",co:"England",d:"King John signs Magna Carta, establishing the rule of law.",c:"politics",w:"Magna_Carta"},
-{y:1347,la:43.7,lo:10.4,t:"Black Death",co:"Italy",d:"Bubonic plague kills one-third of Europe's population.",c:"disaster",w:"Black_Death"},
-{y:1440,la:48.1,lo:11.6,t:"Gutenberg Printing Press",co:"Germany",d:"Movable type printing revolutionizes the spread of knowledge.",c:"science",w:"Printing_press"},
-{y:1453,la:41.0,lo:28.9,t:"Fall of Constantinople",co:"Ottoman Empire",d:"Ottoman forces end 1,000 years of Byzantine rule.",c:"war",w:"Fall_of_Constantinople"},
-{y:1492,la:24.0,lo:-74.5,t:"Columbus Reaches Americas",co:"Bahamas",d:"First permanent European contact with the Americas.",c:"exploration",w:"Christopher_Columbus"},
-{y:1517,la:51.9,lo:12.6,t:"Luther's 95 Theses",co:"Germany",d:"Martin Luther sparks the Protestant Reformation.",c:"culture",w:"Ninety-five_Theses"},
-{y:1543,la:53.0,lo:18.6,t:"Copernican Revolution",co:"Poland",d:"Copernicus publishes his heliocentric model of the solar system.",c:"science",w:"Nicolaus_Copernicus"},
-{y:1588,la:50.4,lo:-4.2,t:"Defeat of Spanish Armada",co:"England",d:"England repels Philip II's invasion fleet.",c:"war",w:"Spanish_Armada"},
-{y:1687,la:52.2,lo:0.12,t:"Newton's Principia",co:"England",d:"Newton publishes laws of motion and universal gravitation.",c:"science",w:"Philosophiæ_Naturalis_Principia_Mathematica"},
-{y:1776,la:39.9,lo:-75.1,t:"American Independence",co:"United States",d:"The thirteen colonies declare independence from Britain.",c:"politics",w:"United_States_Declaration_of_Independence"},
-{y:1789,la:48.86,lo:2.35,t:"French Revolution",co:"France",d:"The storming of the Bastille ignites a revolution reshaping modern politics.",c:"politics",w:"French_Revolution"},
-{y:1804,la:48.86,lo:2.35,t:"Napoleon Crowned Emperor",co:"France",d:"Napoleon crowns himself Emperor at Notre Dame.",c:"politics",w:"Napoleon"},
+/* ── HIGH MEDIEVAL (1000–1350) ── */
+{y:1054,la:41.0,lo:28.9,t:"Great Schism",co:"Byzantine Empire",d:"Christianity splits into Roman Catholic and Eastern Orthodox churches.",c:"culture",w:"East%E2%80%93West_Schism"},
+{y:1066,la:50.9,lo:0.58,t:"Battle of Hastings",co:"England",d:"William the Conqueror defeats Harold, permanently reshaping English culture and language.",c:"war",w:"Battle_of_Hastings"},
+{y:1076,la:41.9,lo:12.5,t:"Investiture Controversy",co:"Italy",d:"Pope Gregory VII excommunicates Emperor Henry IV, asserting papal supremacy over kings.",c:"politics",w:"Investiture_Controversy"},
+{y:1095,la:41.9,lo:12.5,t:"First Crusade",co:"Rome",d:"Pope Urban II calls for a holy war to recapture Jerusalem from Muslim rule.",c:"war",w:"First_Crusade"},
+{y:1099,la:31.8,lo:35.2,t:"Crusaders Capture Jerusalem",co:"Israel",d:"Crusader forces capture Jerusalem after a brutal siege, massacring many inhabitants.",c:"war",w:"Siege_of_Jerusalem_(1099)"},
+{y:1119,la:31.8,lo:35.2,t:"Knights Templar Founded",co:"Israel",d:"The Knights Templar are founded in Jerusalem, becoming the medieval world's most powerful military order.",c:"culture",w:"Knights_Templar"},
+{y:1147,la:38.7,lo:-9.1,t:"Second Crusade",co:"Portugal",d:"The Second Crusade fails to recapture Edessa but helps Portugal capture Lisbon.",c:"war",w:"Second_Crusade"},
+{y:1170,la:51.3,lo:1.1,t:"Murder of Thomas Becket",co:"England",d:"Archbishop of Canterbury is murdered in his own cathedral, shocking medieval Europe.",c:"politics",w:"Thomas_Becket"},
+{y:1187,la:31.8,lo:35.2,t:"Saladin Recaptures Jerusalem",co:"Israel",d:"Saladin retakes Jerusalem from the Crusaders with remarkable restraint and mercy.",c:"war",w:"Saladin"},
+{y:1189,la:51.5,lo:-0.1,t:"Richard the Lionheart",co:"England",d:"Richard I leads the Third Crusade, fighting Saladin to a stalemate.",c:"war",w:"Richard_I_of_England"},
+{y:1198,la:41.9,lo:12.5,t:"Pope Innocent III",co:"Italy",d:"Pope Innocent III brings the medieval papacy to its greatest power and influence.",c:"politics",w:"Pope_Innocent_III"},
+{y:1206,la:47.9,lo:106.9,t:"Mongol Empire Founded",co:"Mongolia",d:"Genghis Khan unites Mongol tribes, founding history's largest contiguous land empire.",c:"politics",w:"Mongol_Empire"},
+{y:1215,la:51.4,lo:-0.57,t:"Magna Carta",co:"England",d:"King John signs Magna Carta at Runnymede, establishing that the king is subject to the rule of law.",c:"politics",w:"Magna_Carta"},
+{y:1227,la:47.9,lo:106.9,t:"Death of Genghis Khan",co:"Mongolia",d:"Genghis Khan dies, having conquered more land than any person in history.",c:"politics",w:"Genghis_Khan"},
+{y:1241,la:47.5,lo:18.9,t:"Mongols Invade Europe",co:"Hungary",d:"Mongol forces devastate Hungary and Poland in a rapid invasion of Central Europe.",c:"war",w:"Mongol_invasion_of_Europe"},
+{y:1258,la:33.3,lo:44.4,t:"Mongols Sack Baghdad",co:"Iraq",d:"The Mongols destroy the Abbasid Caliphate, killing hundreds of thousands and burning the greatest medieval library.",c:"war",w:"Siege_of_Baghdad_(1258)"},
+{y:1271,la:41.0,lo:28.9,t:"Marco Polo's Journey",co:"Italy",d:"Marco Polo departs Venice for China, spending 24 years in Asia.",c:"exploration",w:"Marco_Polo"},
+{y:1291,la:32.8,lo:35.1,t:"Fall of Acre",co:"Israel",d:"The last Crusader stronghold falls to the Mamluks, ending the Crusades.",c:"war",w:"Siege_of_Acre_(1291)"},
+{y:1307,la:48.86,lo:2.35,t:"Knights Templar Destroyed",co:"France",d:"King Philip IV arrests and destroys the Knights Templar, seizing their wealth.",c:"politics",w:"Dissolution_of_the_Knights_Templar"},
+{y:1315,la:47.0,lo:8.0,t:"Great Famine of Europe",co:"Europe",d:"Catastrophic crop failures cause mass starvation across Europe, killing millions.",c:"disaster",w:"Great_Famine_of_1315%E2%80%931322"},
+{y:1337,la:48.86,lo:2.35,t:"Hundred Years War Begins",co:"France",d:"England and France begin a series of conflicts over the French throne lasting 116 years.",c:"war",w:"Hundred_Years%27_War"},
+{y:1347,la:43.7,lo:10.4,t:"Black Death Arrives in Europe",co:"Italy",d:"Bubonic plague reaches Europe, killing one-third of its population in four years.",c:"disaster",w:"Black_Death"},
+{y:1356,la:46.6,lo:0.3,t:"Battle of Poitiers",co:"France",d:"English forces capture the French king, humiliating France in the Hundred Years War.",c:"war",w:"Battle_of_Poitiers"},
+{y:1368,la:39.9,lo:116.4,t:"Ming Dynasty Founded",co:"China",d:"Ming Dynasty replaces Mongol rule, beginning a cultural and economic renaissance.",c:"politics",w:"Ming_dynasty"},
+{y:1378,la:41.9,lo:12.5,t:"Western Schism",co:"Italy",d:"The Catholic Church splits with two rival popes, gravely damaging papal authority.",c:"culture",w:"Western_Schism"},
+/* ── LATE MEDIEVAL & RENAISSANCE (1400–1600) ── */
+{y:1400,la:39.9,lo:32.86,t:"Timur Invades Anatolia",co:"Turkey",d:"Timur the Lame defeats Ottoman Sultan Bayezid I, temporarily halting Ottoman expansion.",c:"war",w:"Timur"},
+{y:1415,la:50.5,lo:2.6,t:"Battle of Agincourt",co:"France",d:"Henry V's English forces defeat a far larger French army with devastating longbow fire.",c:"war",w:"Battle_of_Agincourt"},
+{y:1420,la:48.86,lo:2.35,t:"Treaty of Troyes",co:"France",d:"Henry V of England is recognized as heir to the French throne.",c:"politics",w:"Treaty_of_Troyes"},
+{y:1429,la:47.9,lo:1.9,t:"Joan of Arc at Orléans",co:"France",d:"Joan of Arc leads French forces to victory at Orléans, turning the Hundred Years War.",c:"war",w:"Siege_of_Orl%C3%A9ans"},
+{y:1431,la:49.44,lo:1.1,t:"Joan of Arc Executed",co:"France",d:"The 19-year-old French heroine who rallied France against England is burned at the stake.",c:"war",w:"Joan_of_Arc"},
+{y:1440,la:48.1,lo:11.6,t:"Gutenberg Printing Press",co:"Germany",d:"Johannes Gutenberg develops movable type printing, revolutionizing the spread of knowledge.",c:"science",w:"Printing_press"},
+{y:1453,la:41.0,lo:28.9,t:"Fall of Constantinople",co:"Ottoman Empire",d:"Ottoman forces under Mehmed II end 1,000 years of Byzantine rule.",c:"war",w:"Fall_of_Constantinople"},
+{y:1455,la:48.1,lo:11.6,t:"Gutenberg Bible Printed",co:"Germany",d:"The first major book printed with movable type transforms literacy across Europe.",c:"science",w:"Gutenberg_Bible"},
+{y:1462,la:44.9,lo:24.9,t:"Vlad the Impaler",co:"Romania",d:"Vlad III of Wallachia fights the Ottomans and becomes the inspiration for Dracula.",c:"war",w:"Vlad_the_Impaler"},
+{y:1478,la:40.4,lo:-3.7,t:"Spanish Inquisition",co:"Spain",d:"The Catholic Monarchs establish the Spanish Inquisition to enforce religious conformity.",c:"politics",w:"Spanish_Inquisition"},
+{y:1485,la:52.6,lo:-1.5,t:"Battle of Bosworth Field",co:"England",d:"Henry VII defeats Richard III, ending the Wars of the Roses and founding the Tudor dynasty.",c:"war",w:"Battle_of_Bosworth_Field"},
+{y:1488,la:-34.4,lo:18.5,t:"Cape of Good Hope Rounded",co:"South Africa",d:"Bartolomeu Dias rounds the Cape, opening a sea route to Asia.",c:"exploration",w:"Bartolomeu_Dias"},
+{y:1492,la:24.0,lo:-74.5,t:"Columbus Reaches Americas",co:"Bahamas",d:"Christopher Columbus makes landfall in the Bahamas, beginning permanent European contact with the Americas.",c:"exploration",w:"Christopher_Columbus"},
+{y:1497,la:47.5,lo:-52.7,t:"Cabot Reaches North America",co:"Canada",d:"John Cabot becomes the first European since Norse to reach the North American mainland.",c:"exploration",w:"John_Cabot"},
+{y:1498,la:11.7,lo:43.1,t:"Vasco da Gama Reaches India",co:"India",d:"The Portuguese complete the first sea voyage from Europe to India, opening oceanic trade.",c:"exploration",w:"Vasco_da_Gama"},
+{y:1503,la:41.9,lo:12.5,t:"Mona Lisa Painted",co:"Italy",d:"Leonardo da Vinci begins painting the Mona Lisa, the world's most famous artwork.",c:"culture",w:"Mona_Lisa"},
+{y:1508,la:41.9,lo:12.5,t:"Sistine Chapel Ceiling",co:"Italy",d:"Michelangelo begins painting the Sistine Chapel ceiling, a Renaissance masterpiece.",c:"culture",w:"Sistine_Chapel_ceiling"},
+{y:1513,la:9.0,lo:-79.5,t:"Balboa Sees the Pacific",co:"Panama",d:"Vasco Núñez de Balboa becomes the first European to see the Pacific Ocean from the Americas.",c:"exploration",w:"Vasco_N%C3%BA%C3%B1ez_de_Balboa"},
+{y:1517,la:51.9,lo:12.6,t:"Luther's 95 Theses",co:"Germany",d:"Martin Luther nails his 95 Theses to a church door, sparking the Protestant Reformation.",c:"culture",w:"Ninety-five_Theses"},
+{y:1519,la:19.4,lo:-99.1,t:"Cortés Meets the Aztecs",co:"Mexico",d:"Spanish conquistador Hernán Cortés meets Aztec emperor Montezuma II.",c:"exploration",w:"Hernán_Cortés"},
+{y:1521,la:19.4,lo:-99.1,t:"Fall of Aztec Empire",co:"Mexico",d:"Spanish forces and allied tribes capture Tenochtitlan, ending the Aztec Empire.",c:"war",w:"Fall_of_Tenochtitlan"},
+{y:1522,la:37.5,lo:-5.9,t:"First Circumnavigation",co:"Spain",d:"Magellan-Elcano expedition completes the first voyage around the Earth.",c:"exploration",w:"Ferdinand_Magellan"},
+{y:1532,la:-12.0,lo:-77.0,t:"Conquest of the Incas",co:"Peru",d:"Pizarro captures Inca emperor Atahualpa, beginning the conquest of South America.",c:"war",w:"Francisco_Pizarro"},
+{y:1543,la:53.0,lo:18.6,t:"Copernican Revolution",co:"Poland",d:"Copernicus publishes his heliocentric model, changing humanity's view of its place in the cosmos.",c:"science",w:"Nicolaus_Copernicus"},
+{y:1545,la:46.1,lo:11.1,t:"Council of Trent",co:"Italy",d:"The Catholic Church begins the Counter-Reformation in response to Protestant challenges.",c:"culture",w:"Council_of_Trent"},
+{y:1564,la:52.2,lo:-1.7,t:"Birth of Shakespeare",co:"England",d:"William Shakespeare born in Stratford-upon-Avon — the greatest writer in the English language.",c:"culture",w:"William_Shakespeare"},
+{y:1571,la:38.4,lo:21.8,t:"Battle of Lepanto",co:"Greece",d:"Christian forces defeat the Ottoman fleet, halting Ottoman expansion in the Mediterranean.",c:"war",w:"Battle_of_Lepanto"},
+{y:1572,la:48.86,lo:2.35,t:"St. Bartholomew's Day Massacre",co:"France",d:"Thousands of French Protestants (Huguenots) are massacred by Catholic forces.",c:"disaster",w:"St._Bartholomew%27s_Day_massacre"},
+{y:1580,la:38.7,lo:-9.1,t:"Drake Circumnavigates Globe",co:"England",d:"Francis Drake completes the second circumnavigation of the Earth.",c:"exploration",w:"Francis_Drake"},
+{y:1588,la:50.4,lo:-4.2,t:"Defeat of Spanish Armada",co:"England",d:"England repels Philip II's invasion fleet, establishing naval supremacy.",c:"war",w:"Spanish_Armada"},
+/* ── EARLY MODERN (1600–1800) ── */
+{y:1600,la:35.7,lo:139.7,t:"Battle of Sekigahara",co:"Japan",d:"Tokugawa Ieyasu defeats rivals, unifying Japan and beginning 260 years of shogunate rule.",c:"war",w:"Battle_of_Sekigahara"},
+{y:1602,la:52.4,lo:4.9,t:"Dutch East India Company",co:"Netherlands",d:"The VOC becomes the world's first multinational corporation and joint-stock company.",c:"economy",w:"Dutch_East_India_Company"},
+{y:1605,la:51.5,lo:-0.1,t:"Gunpowder Plot",co:"England",d:"Guy Fawkes and conspirators fail to blow up Parliament and assassinate King James I.",c:"politics",w:"Gunpowder_Plot"},
+{y:1607,la:37.2,lo:-76.8,t:"Jamestown Founded",co:"United States",d:"First permanent English settlement in North America established in Virginia.",c:"exploration",w:"Jamestown,_Virginia"},
+{y:1609,la:45.5,lo:12.3,t:"Galileo's Telescope",co:"Italy",d:"Galileo improves the telescope and observes moons of Jupiter, supporting Copernicus.",c:"science",w:"Galileo_Galilei"},
+{y:1618,la:50.1,lo:14.4,t:"Thirty Years War Begins",co:"Bohemia",d:"A devastating religious conflict engulfs Central Europe, killing up to 8 million people.",c:"war",w:"Thirty_Years%27_War"},
+{y:1620,la:41.9,lo:-70.0,t:"Mayflower at Plymouth",co:"United States",d:"Pilgrims aboard the Mayflower found Plymouth Colony, seeking religious freedom.",c:"exploration",w:"Mayflower"},
+{y:1626,la:40.7,lo:-74.0,t:"Manhattan Purchased",co:"United States",d:"Dutch colonists purchase Manhattan from Native Americans, founding New Amsterdam.",c:"exploration",w:"New_Amsterdam"},
+{y:1632,la:27.2,lo:78.0,t:"Taj Mahal Construction",co:"India",d:"Mughal Emperor Shah Jahan begins building the world's most celebrated monument to love.",c:"culture",w:"Taj_Mahal"},
+{y:1633,la:41.9,lo:12.5,t:"Galileo's Trial",co:"Italy",d:"The Inquisition forces Galileo to recant his support for heliocentrism.",c:"science",w:"Galileo_affair"},
+{y:1637,la:52.4,lo:4.9,t:"Tulip Mania Crashes",co:"Netherlands",d:"The world's first speculative bubble bursts as tulip prices collapse in Holland.",c:"economy",w:"Tulip_mania"},
+{y:1642,la:51.5,lo:-0.1,t:"English Civil War",co:"England",d:"Parliament and King Charles I go to war over constitutional power.",c:"war",w:"English_Civil_War"},
+{y:1643,la:48.86,lo:2.35,t:"Louis XIV Becomes King",co:"France",d:"The 4-year-old Sun King begins his 72-year reign — the longest of any major monarch.",c:"politics",w:"Louis_XIV"},
+{y:1644,la:39.9,lo:116.4,t:"Qing Dynasty Founded",co:"China",d:"Manchu forces capture Beijing, ending the Ming Dynasty and founding the Qing.",c:"politics",w:"Qing_dynasty"},
+{y:1648,la:52.4,lo:4.9,t:"Peace of Westphalia",co:"Netherlands",d:"Treaties ending the Thirty Years War establish the modern nation-state system.",c:"politics",w:"Peace_of_Westphalia"},
+{y:1649,la:51.5,lo:-0.1,t:"King Charles I Executed",co:"England",d:"Charles I is beheaded — the first time a reigning English monarch is tried and executed.",c:"politics",w:"Charles_I_of_England"},
+{y:1665,la:51.5,lo:-0.1,t:"Great Plague of London",co:"England",d:"Bubonic plague kills 100,000 Londoners — about a quarter of the city's population.",c:"disaster",w:"Great_Plague_of_London"},
+{y:1666,la:51.5,lo:-0.1,t:"Great Fire of London",co:"England",d:"Fire destroys 13,000 houses, 87 churches and much of medieval London.",c:"disaster",w:"Great_Fire_of_London"},
+{y:1682,la:56.7,lo:37.4,t:"Peter the Great Becomes Tsar",co:"Russia",d:"Peter the Great begins modernizing Russia and expanding its power westward.",c:"politics",w:"Peter_the_Great"},
+{y:1683,la:48.2,lo:16.3,t:"Siege of Vienna",co:"Austria",d:"The Ottoman Empire's last major attempt to push into Central Europe is repelled.",c:"war",w:"Battle_of_Vienna"},
+{y:1687,la:52.2,lo:0.1,t:"Newton's Principia",co:"England",d:"Isaac Newton publishes laws of motion and universal gravitation, founding classical physics.",c:"science",w:"Philosophiæ_Naturalis_Principia_Mathematica"},
+{y:1688,la:52.0,lo:-2.0,t:"Glorious Revolution",co:"England",d:"Parliament deposes James II, establishing constitutional monarchy and parliamentary supremacy.",c:"politics",w:"Glorious_Revolution"},
+{y:1692,la:42.5,lo:-70.9,t:"Salem Witch Trials",co:"United States",d:"Mass hysteria in Massachusetts leads to 20 executions for alleged witchcraft.",c:"culture",w:"Salem_witch_trials"},
+{y:1700,la:55.75,lo:37.6,t:"Great Northern War",co:"Russia",d:"Peter the Great defeats Sweden, establishing Russia as a major European power.",c:"war",w:"Great_Northern_War"},
+{y:1707,la:55.9,lo:-3.2,t:"Acts of Union — Great Britain",co:"Scotland",d:"England and Scotland unite to form the Kingdom of Great Britain.",c:"politics",w:"Acts_of_Union_1707"},
+{y:1712,la:51.5,lo:-0.1,t:"Steam Engine Invented",co:"England",d:"Thomas Newcomen creates the first practical steam engine, beginning the Industrial Revolution.",c:"science",w:"Newcomen_atmospheric_engine"},
+{y:1721,la:55.75,lo:37.6,t:"Russian Empire Proclaimed",co:"Russia",d:"Peter the Great proclaims the Russian Empire after defeating Sweden.",c:"politics",w:"Russian_Empire"},
+{y:1740,la:48.2,lo:16.3,t:"War of Austrian Succession",co:"Austria",d:"Maria Theresa fights to preserve her throne against Frederick the Great of Prussia.",c:"war",w:"War_of_the_Austrian_Succession"},
+{y:1755,la:38.7,lo:-9.1,t:"Lisbon Earthquake",co:"Portugal",d:"Massive earthquake and tsunami destroy Lisbon on All Saints Day, killing 60,000.",c:"disaster",w:"1755_Lisbon_earthquake"},
+{y:1756,la:48.2,lo:16.3,t:"Seven Years War",co:"Europe",d:"The first truly global conflict, fought across five continents.",c:"war",w:"Seven_Years%27_War"},
+{y:1762,la:55.75,lo:37.6,t:"Catherine the Great",co:"Russia",d:"Catherine the Great seizes power and transforms Russia into a major European power.",c:"politics",w:"Catherine_the_Great"},
+{y:1769,la:-33.9,lo:151.2,t:"Cook Reaches Australia",co:"Australia",d:"James Cook charts the east coast of Australia, claiming it for Britain.",c:"exploration",w:"James_Cook"},
+{y:1773,la:42.4,lo:-71.0,t:"Boston Tea Party",co:"United States",d:"American colonists dump British tea into Boston Harbor, sparking revolutionary tension.",c:"politics",w:"Boston_Tea_Party"},
+{y:1776,la:39.9,lo:-75.1,t:"American Independence",co:"United States",d:"The thirteen colonies declare independence from Britain, creating a new democratic republic.",c:"politics",w:"United_States_Declaration_of_Independence"},
+{y:1783,la:48.86,lo:2.35,t:"First Hot Air Balloon",co:"France",d:"The Montgolfier brothers launch the first successful manned hot air balloon flight.",c:"science",w:"Montgolfier_brothers"},
+{y:1787,la:38.9,lo:-77.0,t:"US Constitution Signed",co:"United States",d:"The United States Constitution is signed, creating the world's oldest written national constitution.",c:"politics",w:"United_States_Constitution"},
+{y:1789,la:48.86,lo:2.35,t:"French Revolution",co:"France",d:"The storming of the Bastille ignites a revolution that reshapes modern politics.",c:"politics",w:"French_Revolution"},
+{y:1793,la:48.86,lo:2.35,t:"Reign of Terror",co:"France",d:"The radical phase of the French Revolution sees 17,000+ executed by guillotine.",c:"war",w:"Reign_of_Terror"},
+{y:1798,la:30.06,lo:31.25,t:"Napoleon Invades Egypt",co:"Egypt",d:"Napoleon's Egyptian campaign discovers the Rosetta Stone, unlocking ancient hieroglyphics.",c:"war",w:"French_campaign_in_Egypt_and_Syria"},
+/* ── 19TH CENTURY ── */
+{y:1804,la:48.86,lo:2.35,t:"Napoleon Crowned Emperor",co:"France",d:"Napoleon crowns himself Emperor of France at Notre Dame Cathedral.",c:"politics",w:"Napoleon"},
+{y:1805,la:36.4,lo:-6.1,t:"Battle of Trafalgar",co:"Spain",d:"Nelson defeats Napoleon's fleet, securing British naval supremacy for a century.",c:"war",w:"Battle_of_Trafalgar"},
+{y:1808,la:40.4,lo:-3.7,t:"Peninsular War",co:"Spain",d:"Napoleon invades Spain, triggering a brutal guerrilla war.",c:"war",w:"Peninsular_War"},
+{y:1810,la:-34.6,lo:-58.4,t:"Argentine Independence Movement",co:"Argentina",d:"The May Revolution in Buenos Aires begins South American independence movements.",c:"politics",w:"Argentine_Declaration_of_Independence"},
+{y:1812,la:55.75,lo:37.6,t:"Napoleon Invades Russia",co:"Russia",d:"Napoleon's catastrophic Russian campaign destroys his Grand Army of 600,000 men.",c:"war",w:"French_invasion_of_Russia"},
 {y:1815,la:50.68,lo:4.41,t:"Battle of Waterloo",co:"Belgium",d:"Napoleon's final defeat ends 23 years of French Revolutionary wars.",c:"war",w:"Battle_of_Waterloo"},
-{y:1859,la:51.4,lo:-2.6,t:"Darwin's Origin of Species",co:"England",d:"Darwin publishes his theory of evolution by natural selection.",c:"science",w:"On_the_Origin_of_Species"},
-{y:1861,la:38.9,lo:-77.0,t:"American Civil War",co:"United States",d:"Four-year conflict that ends slavery in America.",c:"war",w:"American_Civil_War"},
-{y:1869,la:30.6,lo:32.3,t:"Suez Canal Opens",co:"Egypt",d:"The canal connecting Mediterranean and Red Sea opens.",c:"economy",w:"Suez_Canal"},
-{y:1896,la:37.97,lo:23.73,t:"Modern Olympics",co:"Greece",d:"First modern Olympic Games held in Athens.",c:"culture",w:"1896_Summer_Olympics"},
-{y:1903,la:35.9,lo:-75.7,t:"First Powered Flight",co:"United States",d:"Orville Wright's 12-second flight at Kitty Hawk launches aviation.",c:"science",w:"Wright_brothers"},
-{y:1905,la:47.4,lo:8.5,t:"Einstein's Special Relativity",co:"Switzerland",d:"Einstein publishes E=mc², revolutionizing physics.",c:"science",w:"Special_relativity"},
-{y:1912,la:41.7,lo:-49.9,t:"Titanic Sinks",co:"Atlantic Ocean",d:"The RMS Titanic sinks on its maiden voyage, killing 1,517.",c:"disaster",w:"Sinking_of_the_Titanic"},
-{y:1914,la:49.0,lo:3.0,t:"World War I Begins",co:"France",d:"Archduke Franz Ferdinand assassinated. WWI engulfs Europe.",c:"war",w:"World_War_I"},
-{y:1915,la:39.9,lo:41.3,t:"Armenian Genocide",co:"Ottoman Empire",d:"Up to 1.5 million Armenians systematically massacred.",c:"disaster",w:"Armenian_genocide"},
-{y:1917,la:55.75,lo:37.6,t:"Russian Revolution",co:"Russia",d:"Bolsheviks overthrow the Tsar, creating the world's first communist state.",c:"politics",w:"Russian_Revolution"},
-{y:1918,la:52.5,lo:13.4,t:"World War I Ends",co:"Germany",d:"The Armistice of November 11 ends four years of warfare.",c:"war",w:"Armistice_of_11_November_1918"},
-{y:1918,la:48.2,lo:11.6,t:"Spanish Flu Pandemic",co:"Global",d:"The deadliest pandemic in modern history kills 50–100 million.",c:"disaster",w:"Spanish_flu"},
-{y:1923,la:39.9,lo:32.86,t:"Turkish Republic Founded",co:"Turkey",d:"Atatürk proclaims the Republic of Turkey.",c:"politics",w:"Atatürk"},
-{y:1928,la:51.5,lo:-0.12,t:"Penicillin Discovered",co:"England",d:"Alexander Fleming discovers penicillin, founding the antibiotic era.",c:"science",w:"Penicillin"},
-{y:1929,la:40.7,lo:-74.0,t:"Wall Street Crash",co:"United States",d:"Stock market collapse triggers the Great Depression.",c:"economy",w:"Wall_Street_Crash_of_1929"},
-{y:1933,la:52.5,lo:13.4,t:"Hitler Becomes Chancellor",co:"Germany",d:"The Nazi regime transforms Germany into a dictatorship.",c:"politics",w:"Adolf_Hitler"},
-{y:1936,la:40.4,lo:-3.7,t:"Spanish Civil War",co:"Spain",d:"Franco's nationalists battle republicans.",c:"war",w:"Spanish_Civil_War"},
-{y:1939,la:52.2,lo:21.0,t:"World War II Begins",co:"Poland",d:"Germany invades Poland. The deadliest conflict in history begins.",c:"war",w:"World_War_II"},
-{y:1940,la:50.9,lo:1.8,t:"Dunkirk Evacuation",co:"France",d:"338,000 Allied troops evacuated from Dunkirk's beaches.",c:"war",w:"Dunkirk_evacuation"},
-{y:1941,la:21.3,lo:-157.8,t:"Attack on Pearl Harbor",co:"United States",d:"Japan's surprise attack brings the US into WWII.",c:"war",w:"Attack_on_Pearl_Harbor"},
-{y:1942,la:48.7,lo:44.5,t:"Battle of Stalingrad",co:"Soviet Union",d:"The bloodiest battle in history — nearly 2 million dead.",c:"war",w:"Battle_of_Stalingrad"},
-{y:1944,la:49.4,lo:-1.3,t:"D-Day Landings",co:"France",d:"The largest amphibious invasion in history.",c:"war",w:"Normandy_landings"},
-{y:1945,la:34.4,lo:132.4,t:"Hiroshima Atomic Bomb",co:"Japan",d:"First nuclear weapon used in war — 70,000+ killed instantly.",c:"war",w:"Atomic_bombings_of_Hiroshima_and_Nagasaki"},
-{y:1945,la:52.5,lo:13.4,t:"Fall of Berlin",co:"Germany",d:"Soviet forces capture Berlin. Nazi Germany surrenders.",c:"war",w:"Battle_of_Berlin"},
-{y:1945,la:37.8,lo:-122.4,t:"United Nations Founded",co:"United States",d:"50 nations sign the UN Charter in San Francisco.",c:"politics",w:"United_Nations"},
-{y:1947,la:28.6,lo:77.2,t:"Indian Independence",co:"India",d:"India and Pakistan gain independence from Britain.",c:"politics",w:"Indian_independence_movement"},
-{y:1948,la:31.8,lo:35.2,t:"State of Israel Founded",co:"Israel",d:"Israel declares independence, triggering the first Arab-Israeli war.",c:"politics",w:"Israeli_Declaration_of_Independence"},
-{y:1949,la:39.9,lo:116.4,t:"People's Republic of China",co:"China",d:"Mao Zedong proclaims communist victory.",c:"politics",w:"Proclamation_of_the_People%27s_Republic_of_China"},
-{y:1950,la:37.5,lo:127.0,t:"Korean War Begins",co:"Korea",d:"North Korea invades the South, drawing in US and Chinese forces.",c:"war",w:"Korean_War"},
-{y:1953,la:27.98,lo:86.92,t:"Everest First Summited",co:"Nepal",d:"Hillary and Tenzing — first humans on the world's highest peak.",c:"exploration",w:"1953_British_Mount_Everest_expedition"},
-{y:1957,la:55.75,lo:37.6,t:"Sputnik Launched",co:"Soviet Union",d:"The first satellite shocks the West and ignites the Space Race.",c:"science",w:"Sputnik_1"},
-{y:1961,la:52.5,lo:13.4,t:"Berlin Wall Built",co:"Germany",d:"East Germany erects the Wall overnight, dividing Berlin.",c:"politics",w:"Berlin_Wall"},
-{y:1961,la:28.5,lo:-80.6,t:"First Human in Space",co:"Soviet Union",d:"Yuri Gagarin orbits Earth — the first human in space.",c:"science",w:"Vostok_1"},
-{y:1962,la:23.1,lo:-82.4,t:"Cuban Missile Crisis",co:"Cuba",d:"The US and USSR come closest to nuclear war.",c:"war",w:"Cuban_missile_crisis"},
-{y:1963,la:32.78,lo:-96.8,t:"JFK Assassinated",co:"United States",d:"President Kennedy shot in Dallas, shocking the world.",c:"politics",w:"Assassination_of_John_F._Kennedy"},
-{y:1969,la:28.5,lo:-80.6,t:"Moon Landing",co:"United States",d:"Apollo 11: Neil Armstrong becomes first human on the Moon.",c:"science",w:"Apollo_11"},
-{y:1978,la:35.7,lo:51.4,t:"Iranian Revolution",co:"Iran",d:"Khomeini overthrows the Shah, establishing the Islamic Republic.",c:"politics",w:"Iranian_Revolution"},
-{y:1981,la:40.7,lo:-74.0,t:"AIDS Crisis",co:"United States",d:"CDC reports first AIDS cases. 36+ million will die worldwide.",c:"disaster",w:"HIV/AIDS"},
-{y:1986,la:51.3,lo:30.1,t:"Chernobyl Disaster",co:"Soviet Union",d:"The worst nuclear accident in history.",c:"disaster",w:"Chernobyl_disaster"},
-{y:1989,la:52.5,lo:13.4,t:"Berlin Wall Falls",co:"Germany",d:"East Germans tear down the Wall on November 9th.",c:"politics",w:"Fall_of_the_Berlin_Wall"},
-{y:1991,la:55.75,lo:37.6,t:"USSR Dissolved",co:"Soviet Union",d:"The Soviet Union dissolves, ending the Cold War.",c:"politics",w:"Dissolution_of_the_Soviet_Union"},
-{y:1994,la:-1.9,lo:29.9,t:"Rwandan Genocide",co:"Rwanda",d:"800,000 Tutsis murdered in 100 days.",c:"war",w:"Rwandan_genocide"},
-{y:2001,la:40.7,lo:-74.0,t:"September 11 Attacks",co:"United States",d:"Al-Qaeda kills 2,977 people. Global politics transformed overnight.",c:"war",w:"September_11_attacks"},
-{y:2004,la:3.3,lo:95.9,t:"Indian Ocean Tsunami",co:"Indonesia",d:"228,000 killed across 14 countries.",c:"disaster",w:"2004_Indian_Ocean_earthquake_and_tsunami"},
-{y:2008,la:40.7,lo:-74.0,t:"Global Financial Crisis",co:"United States",d:"Lehman Brothers collapse — worst crisis since 1929.",c:"economy",w:"Financial_crisis_of_2007%E2%80%932008"},
-{y:2010,la:35.0,lo:9.0,t:"Arab Spring",co:"Tunisia",d:"A street vendor's self-immolation triggers revolutions across the Arab world.",c:"politics",w:"Arab_Spring"},
-{y:2011,la:38.3,lo:141.0,t:"Fukushima Disaster",co:"Japan",d:"Earthquake and tsunami trigger three nuclear meltdowns.",c:"disaster",w:"Fukushima_nuclear_disaster"},
-{y:2014,la:50.4,lo:30.5,t:"Crimea Annexed",co:"Ukraine",d:"Russia annexes Crimea — worst East-West crisis since Cold War.",c:"war",w:"Annexation_of_Crimea_by_the_Russian_Federation"},
-{y:2015,la:48.8,lo:2.35,t:"Paris Climate Agreement",co:"France",d:"196 nations sign the most ambitious climate deal in history.",c:"politics",w:"Paris_Agreement"},
-{y:2019,la:23.1,lo:113.3,t:"COVID-19 Emerges",co:"China",d:"A novel coronavirus in Wuhan triggers a global pandemic.",c:"disaster",w:"COVID-19_pandemic"},
-{y:2022,la:50.4,lo:30.5,t:"Russia Invades Ukraine",co:"Ukraine",d:"Largest land war in Europe since WWII.",c:"war",w:"2022_Russian_invasion_of_Ukraine"},
-{y:2023,la:31.5,lo:34.4,t:"Hamas Attack on Israel",co:"Israel",d:"Hamas kills 1,200 Israelis, triggering the Gaza War.",c:"war",w:"2023_Hamas-led_attack_on_Israel"},
-{y:2023,la:37.0,lo:37.2,t:"Turkey-Syria Earthquake",co:"Turkey",d:"7.8 earthquake kills over 50,000 people.",c:"disaster",w:"2023_Turkey%E2%80%93Syria_earthquake"},
+{y:1819,la:4.7,lo:-74.1,t:"Simón Bolívar Liberates Colombia",co:"Colombia",d:"Bolívar defeats Spanish forces at Boyacá, freeing Colombia.",c:"war",w:"Simón_Bolívar"},
+{y:1820,la:-77.0,lo:0.0,t:"Antarctica Discovered",co:"Antarctica",d:"The last great landmass is first sighted by explorers — the last major geographic discovery.",c:"exploration",w:"Antarctica"},
+{y:1821,la:37.97,lo:23.73,t:"Greek War of Independence",co:"Greece",d:"Greece fights for independence from the Ottoman Empire, inspiring liberals across Europe.",c:"war",w:"Greek_War_of_Independence"},
+{y:1823,la:38.9,lo:-77.0,t:"Monroe Doctrine",co:"United States",d:"The US declares the Americas off-limits to European colonization.",c:"politics",w:"Monroe_Doctrine"},
+{y:1825,la:54.6,lo:-1.8,t:"First Steam Railway",co:"England",d:"The Stockton and Darlington Railway opens, launching the railway age.",c:"science",w:"Stockton_and_Darlington_Railway"},
+{y:1830,la:48.86,lo:2.35,t:"July Revolution in France",co:"France",d:"Charles X overthrown in a popular uprising, establishing a constitutional monarchy.",c:"politics",w:"July_Revolution"},
+{y:1833,la:51.5,lo:-0.1,t:"Slavery Abolished in British Empire",co:"England",d:"The Slavery Abolition Act frees 800,000 enslaved people across the British Empire.",c:"politics",w:"Slavery_Abolition_Act_1833"},
+{y:1836,la:29.4,lo:-98.5,t:"Battle of the Alamo",co:"United States",d:"Mexican forces defeat Texan rebels at the Alamo, inspiring the Texas Revolution.",c:"war",w:"Battle_of_the_Alamo"},
+{y:1839,la:23.1,lo:113.3,t:"First Opium War",co:"China",d:"Britain forces opium trade on China, beginning China's century of humiliation.",c:"war",w:"First_Opium_War"},
+{y:1844,la:38.9,lo:-77.0,t:"Telegraph Invented",co:"United States",d:"Samuel Morse sends the first telegraph message, transforming long-distance communication.",c:"science",w:"Electrical_telegraph"},
+{y:1845,la:53.4,lo:-8.0,t:"Irish Famine",co:"Ireland",d:"The Great Famine kills 1 million Irish and drives 1 million to emigrate.",c:"disaster",w:"Great_Famine_(Ireland)"},
+{y:1848,la:47.4,lo:8.5,t:"Year of Revolutions",co:"Europe",d:"Liberal revolutions sweep France, Germany, Austria-Hungary and Italy.",c:"politics",w:"Revolutions_of_1848"},
+{y:1848,la:37.7,lo:-122.4,t:"California Gold Rush",co:"United States",d:"Gold discovery at Sutter's Mill triggers mass migration to California.",c:"economy",w:"California_Gold_Rush"},
+{y:1850,la:39.9,lo:116.4,t:"Taiping Rebellion",co:"China",d:"The bloodiest civil war in history kills 20-30 million people in China.",c:"war",w:"Taiping_Rebellion"},
+{y:1853,la:35.7,lo:139.7,t:"Perry Opens Japan",co:"Japan",d:"Commodore Perry's Black Ships force Japan to open its ports after 200 years of isolation.",c:"politics",w:"Perry_Expedition"},
+{y:1854,la:45.0,lo:33.5,t:"Crimean War",co:"Ukraine",d:"Britain, France and the Ottoman Empire fight Russia in the first modern media war.",c:"war",w:"Crimean_War"},
+{y:1857,la:28.6,lo:77.2,t:"Indian Rebellion",co:"India",d:"A massive uprising against British rule nearly ends British control of India.",c:"war",w:"Indian_Rebellion_of_1857"},
+{y:1859,la:51.4,lo:-2.6,t:"Darwin's Origin of Species",co:"England",d:"Darwin publishes his theory of evolution by natural selection — one of the most consequential scientific ideas ever.",c:"science",w:"On_the_Origin_of_Species"},
+{y:1861,la:38.9,lo:-77.0,t:"American Civil War",co:"United States",d:"Confederate forces attack Fort Sumter, beginning a four-year conflict that ends slavery.",c:"war",w:"American_Civil_War"},
+{y:1863,la:38.9,lo:-77.0,t:"Emancipation Proclamation",co:"United States",d:"Lincoln declares all enslaved people in Confederate states to be free.",c:"politics",w:"Emancipation_Proclamation"},
+{y:1864,la:46.2,lo:6.15,t:"Geneva Convention Founded",co:"Switzerland",d:"The first Geneva Convention establishes rules for the humane treatment of wounded soldiers.",c:"politics",w:"First_Geneva_Convention"},
+{y:1865,la:38.9,lo:-77.0,t:"Lincoln Assassinated",co:"United States",d:"President Lincoln shot at Ford's Theatre days after Confederate surrender.",c:"politics",w:"Assassination_of_Abraham_Lincoln"},
+{y:1869,la:30.6,lo:32.3,t:"Suez Canal Opens",co:"Egypt",d:"The canal connecting Mediterranean and Red Sea opens, revolutionizing global shipping.",c:"economy",w:"Suez_Canal"},
+{y:1869,la:41.0,lo:-112.0,t:"US Transcontinental Railroad",co:"United States",d:"The first transcontinental railroad connects the US coast to coast.",c:"economy",w:"First_transcontinental_railroad"},
+{y:1871,la:52.5,lo:13.4,t:"German Empire Proclaimed",co:"Germany",d:"Prussia unifies German states into the German Empire at Versailles.",c:"politics",w:"German_Empire"},
+{y:1876,la:38.9,lo:-77.0,t:"Telephone Invented",co:"United States",d:"Alexander Graham Bell patents the telephone, beginning electronic communication.",c:"science",w:"Alexander_Graham_Bell"},
+{y:1879,la:-22.9,lo:-43.1,t:"War of the Pacific",co:"Chile",d:"Chile defeats Bolivia and Peru, reshaping South America's borders permanently.",c:"war",w:"War_of_the_Pacific"},
+{y:1883,la:-6.1,lo:105.4,t:"Krakatoa Eruption",co:"Indonesia",d:"Krakatoa's catastrophic eruption is heard 5,000 km away and kills 36,000.",c:"disaster",w:"1883_eruption_of_Krakatoa"},
+{y:1884,la:52.5,lo:13.4,t:"Berlin Conference — Africa Divided",co:"Germany",d:"European powers divide Africa between them without African input.",c:"politics",w:"Berlin_Conference"},
+{y:1885,la:48.8,lo:8.5,t:"First Automobile",co:"Germany",d:"Karl Benz patents the first true gasoline-powered automobile.",c:"science",w:"Karl_Benz"},
+{y:1888,la:-23.5,lo:-46.6,t:"Brazil Abolishes Slavery",co:"Brazil",d:"Brazil becomes the last country in the Western Hemisphere to abolish slavery.",c:"politics",w:"Lei_%C3%81urea"},
+{y:1895,la:49.5,lo:11.0,t:"X-Rays Discovered",co:"Germany",d:"Wilhelm Röntgen discovers X-rays, revolutionizing medicine.",c:"science",w:"X-ray"},
+{y:1896,la:37.97,lo:23.73,t:"Modern Olympics Founded",co:"Greece",d:"First modern Olympic Games held in Athens, reviving the ancient tradition.",c:"culture",w:"1896_Summer_Olympics"},
+{y:1898,la:23.1,lo:-82.4,t:"Spanish-American War",co:"Cuba",d:"The US defeats Spain, gaining Puerto Rico, Guam and the Philippines.",c:"war",w:"Spanish%E2%80%93American_War"},
+{y:1899,la:-28.0,lo:25.0,t:"Boer War",co:"South Africa",d:"Britain fights to control South Africa's gold and diamond regions against Boer settlers.",c:"war",w:"Second_Boer_War"},
+/* ── 20TH CENTURY ── */
+{y:1900,la:39.9,lo:116.4,t:"Boxer Rebellion",co:"China",d:"Chinese nationalists lay siege to foreign legations in Beijing.",c:"war",w:"Boxer_Rebellion"},
+{y:1903,la:35.9,lo:-75.7,t:"First Powered Flight",co:"United States",d:"Orville Wright's 12-second flight at Kitty Hawk launches the aviation age.",c:"science",w:"Wright_brothers"},
+{y:1904,la:43.1,lo:131.9,t:"Russo-Japanese War",co:"Russia",d:"Japan defeats Russia, shocking Europe and signaling the rise of Asian powers.",c:"war",w:"Russo-Japanese_War"},
+{y:1905,la:47.4,lo:8.5,t:"Einstein's Special Relativity",co:"Switzerland",d:"Einstein publishes E=mc², revolutionizing physics and our understanding of space and time.",c:"science",w:"Special_relativity"},
+{y:1905,la:55.75,lo:37.6,t:"Russian Revolution of 1905",co:"Russia",d:"Bloody Sunday massacre forces the Tsar to establish a parliament.",c:"politics",w:"Russian_Revolution_of_1905"},
+{y:1906,la:37.7,lo:-122.4,t:"San Francisco Earthquake",co:"United States",d:"A 7.9 earthquake and fires destroy much of San Francisco.",c:"disaster",w:"1906_San_Francisco_earthquake"},
+{y:1908,la:60.9,lo:101.9,t:"Tunguska Event",co:"Russia",d:"A massive explosion flattens 2,000 sq km of Siberian forest — likely an asteroid air burst.",c:"disaster",w:"Tunguska_event"},
+{y:1910,la:19.4,lo:-99.1,t:"Mexican Revolution",co:"Mexico",d:"Revolution overthrows Porfirio Díaz after 35 years, reshaping Mexico.",c:"war",w:"Mexican_Revolution"},
+{y:1911,la:39.9,lo:116.4,t:"Chinese Revolution",co:"China",d:"Sun Yat-sen's revolution ends 2,000 years of imperial rule in China.",c:"politics",w:"Xinhai_Revolution"},
+{y:1911,la:-12.0,lo:-75.0,t:"Machu Picchu Discovered",co:"Peru",d:"Hiram Bingham brings the lost Inca citadel to world attention.",c:"exploration",w:"Machu_Picchu"},
+{y:1912,la:41.7,lo:-49.9,t:"Titanic Sinks",co:"Atlantic Ocean",d:"The RMS Titanic hits an iceberg on its maiden voyage, killing 1,517 people.",c:"disaster",w:"Sinking_of_the_Titanic"},
+{y:1914,la:43.85,lo:18.4,t:"Franz Ferdinand Assassinated",co:"Bosnia",d:"The assassination in Sarajevo triggers the alliances that start WWI.",c:"politics",w:"Assassination_of_Archduke_Franz_Ferdinand"},
+{y:1914,la:49.0,lo:3.0,t:"World War I — Western Front",co:"France",d:"Millions die in trench warfare as the front lines barely move for four years.",c:"war",w:"Western_Front_(World_War_I)"},
+{y:1915,la:39.9,lo:41.3,t:"Armenian Genocide",co:"Ottoman Empire",d:"The Ottoman government systematically massacres up to 1.5 million Armenians.",c:"disaster",w:"Armenian_genocide"},
+{y:1915,la:40.0,lo:26.3,t:"Battle of Gallipoli",co:"Turkey",d:"Allied forces fail to open a route through the Dardanelles, with 250,000 casualties.",c:"war",w:"Gallipoli_campaign"},
+{y:1916,la:49.2,lo:5.1,t:"Battle of Verdun",co:"France",d:"The longest WWI battle lasts 303 days, killing nearly 700,000 soldiers.",c:"war",w:"Battle_of_Verdun"},
+{y:1916,la:57.7,lo:-2.4,t:"Battle of the Somme",co:"England",d:"60,000 British casualties on the first day alone. A million total casualties over 141 days.",c:"war",w:"Battle_of_the_Somme"},
+{y:1917,la:55.75,lo:37.6,t:"Russian Revolution",co:"Russia",d:"Bolsheviks overthrow the Tsar, creating the world's first communist state under Lenin.",c:"politics",w:"Russian_Revolution"},
+{y:1917,la:38.9,lo:-77.0,t:"USA Enters WWI",co:"United States",d:"The United States declares war on Germany, tipping the balance of World War I.",c:"war",w:"United_States_in_World_War_I"},
+{y:1918,la:52.5,lo:13.4,t:"World War I Ends",co:"Germany",d:"The Armistice of November 11 ends four years of warfare, leaving 20 million dead.",c:"war",w:"Armistice_of_11_November_1918"},
+{y:1918,la:48.2,lo:11.6,t:"Spanish Flu Pandemic",co:"Global",d:"The deadliest pandemic in modern history infects 500 million and kills 50–100 million.",c:"disaster",w:"Spanish_flu"},
+{y:1919,la:48.86,lo:2.35,t:"Treaty of Versailles",co:"France",d:"Harsh peace terms on Germany plant seeds of resentment that fuel WWII.",c:"politics",w:"Treaty_of_Versailles"},
+{y:1919,la:53.3,lo:-6.3,t:"Irish War of Independence",co:"Ireland",d:"Ireland fights for independence from British rule, resulting in partition.",c:"war",w:"Irish_War_of_Independence"},
+{y:1920,la:38.9,lo:-77.0,t:"Women's Suffrage in USA",co:"United States",d:"The 19th Amendment gives American women the right to vote.",c:"politics",w:"Nineteenth_Amendment_to_the_United_States_Constitution"},
+{y:1921,la:55.75,lo:37.6,t:"Soviet Union Established",co:"Russia",d:"Lenin founds the USSR — the world's first communist superstate.",c:"politics",w:"Soviet_Union"},
+{y:1922,la:41.9,lo:12.5,t:"Mussolini Seizes Power",co:"Italy",d:"Mussolini's March on Rome installs Europe's first fascist dictator.",c:"politics",w:"Benito_Mussolini"},
+{y:1922,la:30.06,lo:31.25,t:"Tutankhamun's Tomb Discovered",co:"Egypt",d:"Howard Carter opens the near-intact tomb of the boy pharaoh, treasures intact after 3,000 years.",c:"culture",w:"Tutankhamun"},
+{y:1923,la:39.9,lo:32.86,t:"Turkish Republic Founded",co:"Turkey",d:"Mustafa Kemal Atatürk proclaims the Republic of Turkey, beginning radical modernization.",c:"politics",w:"Atatürk"},
+{y:1923,la:35.7,lo:139.7,t:"Great Kanto Earthquake",co:"Japan",d:"A magnitude 7.9 earthquake destroys Tokyo and Yokohama, killing 140,000.",c:"disaster",w:"1923_Great_Kant%C5%8D_earthquake"},
+{y:1924,la:28.6,lo:77.2,t:"Death of Lenin",co:"Russia",d:"Vladimir Lenin dies, triggering a power struggle that brings Stalin to power.",c:"politics",w:"Vladimir_Lenin"},
+{y:1927,la:48.86,lo:2.35,t:"Lindbergh's Atlantic Flight",co:"France",d:"Charles Lindbergh completes the first solo nonstop transatlantic flight in 33.5 hours.",c:"science",w:"Charles_Lindbergh"},
+{y:1927,la:39.9,lo:116.4,t:"Chinese Civil War Resumes",co:"China",d:"Nationalist forces clash with communists as China descends into prolonged civil conflict.",c:"war",w:"Chinese_Civil_War"},
+{y:1928,la:51.5,lo:-0.12,t:"Penicillin Discovered",co:"England",d:"Alexander Fleming discovers penicillin after noticing mold killing bacteria, founding the antibiotic era.",c:"science",w:"Penicillin"},
+{y:1929,la:40.7,lo:-74.0,t:"Wall Street Crash",co:"United States",d:"Stock market collapse triggers the Great Depression worldwide, causing mass unemployment.",c:"economy",w:"Wall_Street_Crash_of_1929"},
+{y:1930,la:23.0,lo:72.6,t:"Gandhi's Salt March",co:"India",d:"Gandhi's 240-mile march to the sea defies British salt laws, galvanizing India's independence movement.",c:"politics",w:"Salt_March"},
+{y:1931,la:41.8,lo:123.4,t:"Japan Invades Manchuria",co:"China",d:"Japan seizes Manchuria, beginning aggression that leads to WWII in the Pacific.",c:"war",w:"Manchurian_Incident"},
+{y:1933,la:52.5,lo:13.4,t:"Hitler Becomes Chancellor",co:"Germany",d:"Adolf Hitler appointed Chancellor of Germany, beginning the Nazi regime.",c:"politics",w:"Adolf_Hitler"},
+{y:1934,la:34.3,lo:106.6,t:"Long March",co:"China",d:"Mao Zedong leads 100,000 communists on a 9,000-km retreat, cementing his leadership.",c:"politics",w:"Long_March"},
+{y:1935,la:9.0,lo:38.7,t:"Italy Invades Ethiopia",co:"Ethiopia",d:"Mussolini's forces use poison gas against Ethiopian civilians in a colonial conquest.",c:"war",w:"Second_Italo-Ethiopian_War"},
+{y:1936,la:40.4,lo:-3.7,t:"Spanish Civil War",co:"Spain",d:"Franco's nationalists battle republicans in a bitter civil war that tests WWII-era weapons.",c:"war",w:"Spanish_Civil_War"},
+{y:1937,la:31.2,lo:118.8,t:"Nanjing Massacre",co:"China",d:"Japanese forces massacre up to 300,000 civilians in six weeks.",c:"war",w:"Nanjing_massacre"},
+{y:1938,la:48.2,lo:16.3,t:"Anschluss",co:"Austria",d:"Nazi Germany absorbs Austria without firing a shot.",c:"politics",w:"Anschluss"},
+{y:1938,la:50.8,lo:15.0,t:"Munich Agreement",co:"Czechoslovakia",d:"Britain and France appease Hitler by allowing the annexation of Czechoslovakia's Sudetenland.",c:"politics",w:"Munich_Agreement"},
+{y:1939,la:52.2,lo:21.0,t:"World War II Begins",co:"Poland",d:"Germany invades Poland on September 1. The deadliest conflict in human history begins.",c:"war",w:"World_War_II"},
+{y:1939,la:60.2,lo:24.9,t:"Winter War",co:"Finland",d:"Finland heroically fights the Soviet invasion, inflicting heavy casualties before yielding.",c:"war",w:"Winter_War"},
+{y:1940,la:50.9,lo:1.8,t:"Dunkirk Evacuation",co:"France",d:"338,000 Allied troops evacuated from Dunkirk's beaches in a miraculous operation.",c:"war",w:"Dunkirk_evacuation"},
+{y:1940,la:51.5,lo:-0.1,t:"Battle of Britain",co:"England",d:"The RAF defeats the Luftwaffe in history's first major air campaign.",c:"war",w:"Battle_of_Britain"},
+{y:1941,la:21.3,lo:-157.8,t:"Attack on Pearl Harbor",co:"United States",d:"Japan's surprise attack on Pearl Harbor kills 2,400 Americans and brings the US into WWII.",c:"war",w:"Attack_on_Pearl_Harbor"},
+{y:1941,la:53.9,lo:27.6,t:"Operation Barbarossa",co:"Soviet Union",d:"Germany launches the largest military invasion in history against the USSR with 3 million troops.",c:"war",w:"Operation_Barbarossa"},
+{y:1942,la:3.1,lo:153.0,t:"Battle of Midway",co:"Pacific Ocean",d:"A decisive US naval victory cripples the Japanese fleet, turning the tide in the Pacific.",c:"war",w:"Battle_of_Midway"},
+{y:1942,la:48.7,lo:44.5,t:"Battle of Stalingrad",co:"Soviet Union",d:"The bloodiest battle in history kills nearly 2 million. The decisive turning point of WWII.",c:"war",w:"Battle_of_Stalingrad"},
+{y:1944,la:49.4,lo:-1.3,t:"D-Day Landings",co:"France",d:"The largest amphibious invasion in history on Normandy's beaches begins the liberation of Europe.",c:"war",w:"Normandy_landings"},
+{y:1945,la:34.4,lo:132.4,t:"Hiroshima Atomic Bomb",co:"Japan",d:"The US drops the first nuclear weapon used in war, killing 70,000+ instantly.",c:"war",w:"Atomic_bombings_of_Hiroshima_and_Nagasaki"},
+{y:1945,la:32.8,lo:129.9,t:"Nagasaki Atomic Bomb",co:"Japan",d:"Second atomic bomb forces Japan's unconditional surrender, ending WWII in the Pacific.",c:"war",w:"Atomic_bombings_of_Hiroshima_and_Nagasaki"},
+{y:1945,la:52.5,lo:13.4,t:"Fall of Berlin",co:"Germany",d:"Soviet forces capture Berlin. Hitler dies in his bunker. Nazi Germany surrenders.",c:"war",w:"Battle_of_Berlin"},
+{y:1945,la:37.8,lo:-122.4,t:"United Nations Founded",co:"United States",d:"50 nations sign the UN Charter in San Francisco, creating an international body to prevent future wars.",c:"politics",w:"United_Nations"},
+{y:1945,la:50.0,lo:14.4,t:"Nuremberg Trials",co:"Germany",d:"Nazi leaders are tried for war crimes, establishing that heads of state can be held accountable.",c:"politics",w:"Nuremberg_trials"},
+{y:1947,la:28.6,lo:77.2,t:"Indian Independence",co:"India",d:"India and Pakistan gain independence from Britain. Partition triggers one of history's largest migrations.",c:"politics",w:"Indian_independence_movement"},
+{y:1947,la:38.9,lo:-77.0,t:"Marshall Plan",co:"United States",d:"The US provides $13 billion to rebuild war-devastated Western Europe.",c:"economy",w:"Marshall_Plan"},
+{y:1948,la:31.8,lo:35.2,t:"State of Israel Founded",co:"Israel",d:"Israel declares independence, immediately triggering the first Arab-Israeli war.",c:"politics",w:"Israeli_Declaration_of_Independence"},
+{y:1948,la:52.5,lo:13.4,t:"Berlin Airlift",co:"Germany",d:"Western allies airlift supplies to West Berlin for 11 months after Soviet blockade.",c:"politics",w:"Berlin_Blockade"},
+{y:1949,la:39.9,lo:116.4,t:"People's Republic of China",co:"China",d:"Mao Zedong proclaims the People's Republic of China after communist victory.",c:"politics",w:"Proclamation_of_the_People%27s_Republic_of_China"},
+{y:1950,la:37.5,lo:127.0,t:"Korean War Begins",co:"Korea",d:"North Korea invades the South, drawing in US-led UN forces and Chinese troops.",c:"war",w:"Korean_War"},
+{y:1952,la:51.5,lo:-0.12,t:"Great Smog of London",co:"England",d:"Deadly smog kills 4,000 Londoners in five days, leading to landmark clean air laws.",c:"disaster",w:"Great_Smog_of_London"},
+{y:1953,la:27.98,lo:86.92,t:"Everest First Summited",co:"Nepal",d:"Edmund Hillary and Tenzing Norgay become the first humans on the world's highest peak.",c:"exploration",w:"1953_British_Mount_Everest_expedition"},
+{y:1953,la:51.5,lo:0.1,t:"DNA Structure Discovered",co:"England",d:"Watson and Crick reveal the double helix structure of DNA, unlocking the secrets of life.",c:"science",w:"Nucleic_acid_double_helix"},
+{y:1953,la:37.5,lo:127.0,t:"Korean War Armistice",co:"Korea",d:"An armistice ends active fighting in Korea. The war technically never officially ended.",c:"war",w:"Korean_Armistice_Agreement"},
+{y:1954,la:7.9,lo:98.3,t:"Battle of Dien Bien Phu",co:"Vietnam",d:"France's decisive defeat ends Indochina colonialism and sets the stage for US involvement.",c:"war",w:"Battle_of_Dien_Bien_Phu"},
+{y:1955,la:32.4,lo:-86.3,t:"Montgomery Bus Boycott",co:"United States",d:"Rosa Parks refuses to give up her seat. The American civil rights movement launches.",c:"politics",w:"Montgomery_bus_boycott"},
+{y:1956,la:30.06,lo:31.25,t:"Suez Crisis",co:"Egypt",d:"Egypt nationalizes the Suez Canal. Britain, France and Israel invade but are forced to withdraw.",c:"war",w:"Suez_Crisis"},
+{y:1957,la:55.75,lo:37.6,t:"Sputnik Launched",co:"Soviet Union",d:"The first artificial satellite shocks the West and ignites the Space Race.",c:"science",w:"Sputnik_1"},
+{y:1958,la:34.3,lo:108.9,t:"Great Leap Forward",co:"China",d:"Mao's disastrous industrialization campaign causes a famine killing 15–55 million.",c:"disaster",w:"Great_Leap_Forward"},
+{y:1959,la:23.1,lo:-82.4,t:"Cuban Revolution",co:"Cuba",d:"Fidel Castro ousts US-backed dictator Batista, establishing communism 90 miles from Florida.",c:"politics",w:"Cuban_Revolution"},
+{y:1960,la:-1.3,lo:36.8,t:"Year of Africa",co:"Africa",d:"17 African nations gain independence in a single year, signaling the end of European colonialism.",c:"politics",w:"Year_of_Africa"},
+{y:1961,la:52.5,lo:13.4,t:"Berlin Wall Built",co:"Germany",d:"East Germany erects the Wall overnight, physically dividing Berlin.",c:"politics",w:"Berlin_Wall"},
+{y:1961,la:28.5,lo:-80.6,t:"First Human in Space",co:"Soviet Union",d:"Yuri Gagarin orbits Earth — the first human in space, in Vostok 1.",c:"science",w:"Vostok_1"},
+{y:1962,la:23.1,lo:-82.4,t:"Cuban Missile Crisis",co:"Cuba",d:"The US and USSR come closest to nuclear war. Thirteen days of tense diplomacy avert catastrophe.",c:"war",w:"Cuban_missile_crisis"},
+{y:1963,la:32.78,lo:-96.8,t:"JFK Assassinated",co:"United States",d:"President Kennedy is shot in Dallas, Texas. The assassination shocks the world.",c:"politics",w:"Assassination_of_John_F._Kennedy"},
+{y:1963,la:38.9,lo:-77.0,t:"March on Washington",co:"United States",d:"250,000 march on Washington. Martin Luther King delivers 'I Have a Dream'.",c:"politics",w:"March_on_Washington_for_Jobs_and_Freedom"},
+{y:1964,la:38.9,lo:-77.0,t:"Civil Rights Act",co:"United States",d:"Landmark law ends racial segregation and discrimination in the United States.",c:"politics",w:"Civil_Rights_Act_of_1964"},
+{y:1965,la:1.35,lo:103.8,t:"Singapore Independence",co:"Singapore",d:"Singapore separates from Malaysia, beginning its transformation into one of Asia's wealthiest nations.",c:"politics",w:"History_of_Singapore"},
+{y:1966,la:39.9,lo:116.4,t:"Cultural Revolution",co:"China",d:"Mao Zedong launches a decade of political terror and cultural destruction that kills millions.",c:"politics",w:"Cultural_Revolution"},
+{y:1967,la:31.8,lo:35.2,t:"Six-Day War",co:"Israel",d:"Israel launches a preemptive strike, capturing the West Bank, Gaza, Sinai and Golan Heights.",c:"war",w:"Six-Day_War"},
+{y:1968,la:50.08,lo:14.43,t:"Prague Spring",co:"Czechoslovakia",d:"Soviet tanks crush Alexander Dubček's liberal reforms.",c:"politics",w:"Prague_Spring"},
+{y:1968,la:38.9,lo:-77.0,t:"MLK Assassinated",co:"United States",d:"Martin Luther King Jr. shot dead in Memphis, sparking riots across American cities.",c:"politics",w:"Assassination_of_Martin_Luther_King_Jr."},
+{y:1969,la:28.5,lo:-80.6,t:"Moon Landing",co:"United States",d:"Apollo 11: Neil Armstrong and Buzz Aldrin become the first humans to walk on the Moon.",c:"science",w:"Apollo_11"},
+{y:1971,la:23.68,lo:90.35,t:"Bangladesh Liberation War",co:"Bangladesh",d:"Bangladesh declares independence from Pakistan after a brutal war.",c:"war",w:"Bangladesh_Liberation_War"},
+{y:1972,la:39.9,lo:116.4,t:"Nixon Visits China",co:"China",d:"Nixon's historic visit ends 25 years of US-China isolation.",c:"politics",w:"Nixon%27s_visit_to_China"},
+{y:1972,la:48.2,lo:11.6,t:"Munich Olympics Massacre",co:"Germany",d:"Palestinian terrorists kill 11 Israeli athletes at the Munich Olympics.",c:"war",w:"Munich_massacre"},
+{y:1973,la:-33.4,lo:-70.6,t:"Chilean Coup",co:"Chile",d:"General Pinochet overthrows democratically elected President Allende in a CIA-backed coup.",c:"politics",w:"1973_Chilean_coup_d%27état"},
+{y:1973,la:26.8,lo:30.8,t:"Yom Kippur War",co:"Egypt",d:"Egypt and Syria attack Israel on the Jewish holy day. A global oil crisis follows.",c:"war",w:"Yom_Kippur_War"},
+{y:1974,la:38.9,lo:-77.0,t:"Nixon Resigns — Watergate",co:"United States",d:"Facing impeachment over Watergate, Nixon becomes the only US president to resign.",c:"politics",w:"Richard_Nixon"},
+{y:1975,la:11.55,lo:104.9,t:"Fall of Saigon",co:"Vietnam",d:"North Vietnam captures Saigon, ending America's longest war.",c:"war",w:"Fall_of_Saigon"},
+{y:1975,la:11.5,lo:104.9,t:"Khmer Rouge — Killing Fields",co:"Cambodia",d:"Pol Pot's regime murders nearly 2 million Cambodians in one of history's worst genocides.",c:"war",w:"Khmer_Rouge"},
+{y:1976,la:-26.3,lo:27.8,t:"Soweto Uprising",co:"South Africa",d:"Black schoolchildren protest apartheid. Police open fire, galvanizing global opposition.",c:"politics",w:"Soweto_uprising"},
+{y:1978,la:35.7,lo:51.4,t:"Iranian Revolution",co:"Iran",d:"Ayatollah Khomeini overthrows the Shah, establishing the Islamic Republic of Iran.",c:"politics",w:"Iranian_Revolution"},
+{y:1979,la:34.5,lo:69.2,t:"Soviet Invasion of Afghanistan",co:"Afghanistan",d:"The USSR invades Afghanistan, beginning a decade-long quagmire that drains Soviet resources.",c:"war",w:"Soviet%E2%80%93Afghan_War"},
+{y:1979,la:51.5,lo:-0.12,t:"Thatcher Becomes PM",co:"England",d:"Margaret Thatcher becomes Britain's first female Prime Minister.",c:"politics",w:"Margaret_Thatcher"},
+{y:1980,la:33.3,lo:44.4,t:"Iran-Iraq War",co:"Iraq",d:"Saddam Hussein invades Iran, beginning an 8-year war killing over a million people.",c:"war",w:"Iran%E2%80%93Iraq_War"},
+{y:1980,la:46.2,lo:-122.2,t:"Mount St. Helens Erupts",co:"United States",d:"A massive volcanic eruption kills 57 people and devastates 600 sq km of Washington state.",c:"disaster",w:"1980_eruption_of_Mount_St._Helens"},
+{y:1981,la:40.7,lo:-74.0,t:"AIDS Crisis Recognized",co:"United States",d:"The CDC reports the first AIDS cases. The epidemic ultimately kills over 36 million worldwide.",c:"disaster",w:"HIV/AIDS"},
+{y:1981,la:52.2,lo:21.0,t:"Solidarity Movement",co:"Poland",d:"Lech Wałęsa leads Poland's first independent trade union, seeding the fall of communism.",c:"politics",w:"Solidarity_(Polish_trade_union)"},
+{y:1982,la:-51.7,lo:-57.9,t:"Falklands War",co:"Argentina",d:"Britain defeats Argentina in a war over remote South Atlantic islands.",c:"war",w:"Falklands_War"},
+{y:1984,la:23.25,lo:77.4,t:"Bhopal Gas Disaster",co:"India",d:"A Union Carbide pesticide plant leak in Bhopal kills thousands — the world's worst industrial accident.",c:"disaster",w:"Bhopal_disaster"},
+{y:1985,la:55.75,lo:37.6,t:"Gorbachev's Reforms",co:"Soviet Union",d:"Mikhail Gorbachev introduces glasnost and perestroika, reforms that accelerate the Soviet fall.",c:"politics",w:"Mikhail_Gorbachev"},
+{y:1986,la:51.3,lo:30.1,t:"Chernobyl Disaster",co:"Soviet Union",d:"Reactor 4 explodes in the worst nuclear accident in history, irradiating vast areas of Europe.",c:"disaster",w:"Chernobyl_disaster"},
+{y:1986,la:28.5,lo:-80.6,t:"Challenger Disaster",co:"United States",d:"Space Shuttle Challenger explodes 73 seconds after launch, killing all 7 crew members.",c:"disaster",w:"Space_Shuttle_Challenger_disaster"},
+{y:1987,la:55.75,lo:37.6,t:"INF Treaty Signed",co:"Soviet Union",d:"Reagan and Gorbachev sign the first treaty eliminating an entire class of nuclear weapons.",c:"politics",w:"Intermediate-Range_Nuclear_Forces_Treaty"},
+{y:1989,la:39.9,lo:116.4,t:"Tiananmen Square",co:"China",d:"The Chinese government crushes pro-democracy protesters. The iconic 'Tank Man' image circulates worldwide.",c:"politics",w:"1989_Tiananmen_Square_protests"},
+{y:1989,la:52.5,lo:13.4,t:"Berlin Wall Falls",co:"Germany",d:"East Germans tear down the Wall on November 9th, symbolically ending the Cold War.",c:"politics",w:"Fall_of_the_Berlin_Wall"},
+{y:1989,la:44.8,lo:20.5,t:"Romanian Revolution",co:"Romania",d:"Ceaușescu is overthrown and executed in the last violent European communist revolution.",c:"politics",w:"Romanian_Revolution"},
+{y:1990,la:-26.2,lo:28.2,t:"Mandela Released",co:"South Africa",d:"After 27 years in prison, Nelson Mandela walks free, leading South Africa toward democracy.",c:"politics",w:"Nelson_Mandela"},
+{y:1990,la:52.5,lo:13.4,t:"German Reunification",co:"Germany",d:"East and West Germany officially reunite after 45 years of division.",c:"politics",w:"German_reunification"},
+{y:1991,la:55.75,lo:37.6,t:"USSR Dissolved",co:"Soviet Union",d:"The Soviet Union formally dissolves on December 25, ending the Cold War.",c:"politics",w:"Dissolution_of_the_Soviet_Union"},
+{y:1991,la:33.3,lo:44.4,t:"Gulf War",co:"Iraq",d:"A US-led coalition launches Operation Desert Storm to expel Iraqi forces from Kuwait.",c:"war",w:"Gulf_War"},
+{y:1991,la:44.8,lo:20.5,t:"Yugoslav Wars Begin",co:"Yugoslavia",d:"Yugoslavia breaks apart into ethnic conflict killing 140,000.",c:"war",w:"Yugoslav_Wars"},
+{y:1993,la:38.9,lo:-77.0,t:"World Wide Web Goes Public",co:"United States",d:"CERN releases the World Wide Web's source code, beginning the internet revolution.",c:"science",w:"World_Wide_Web"},
+{y:1994,la:-1.9,lo:29.9,t:"Rwandan Genocide",co:"Rwanda",d:"Hutu extremists murder 800,000 Tutsis in 100 days. The world fails to intervene.",c:"war",w:"Rwandan_genocide"},
+{y:1994,la:-26.2,lo:28.2,t:"End of Apartheid",co:"South Africa",d:"Mandela elected president in South Africa's first fully democratic election.",c:"politics",w:"South_African_general_election,_1994"},
+{y:1995,la:44.5,lo:16.0,t:"Srebrenica Massacre",co:"Bosnia",d:"Bosnian Serb forces massacre 8,000 Bosniak Muslims — the worst European atrocity since WWII.",c:"war",w:"Srebrenica_massacre"},
+{y:1997,la:22.3,lo:114.2,t:"Hong Kong Handover",co:"Hong Kong",d:"Britain returns Hong Kong to China after 156 years of colonial rule.",c:"politics",w:"Handover_of_Hong_Kong"},
+{y:1997,la:5.5,lo:104.0,t:"Asian Financial Crisis",co:"Thailand",d:"Currency crisis devastates economies from Thailand to South Korea and Indonesia.",c:"economy",w:"1997_Asian_financial_crisis"},
+{y:1998,la:33.7,lo:73.1,t:"Pakistan Nuclear Tests",co:"Pakistan",d:"Pakistan successfully tests nuclear weapons, making South Asia the world's newest nuclear flashpoint.",c:"science",w:"Chagai-I"},
+{y:1999,la:44.8,lo:20.5,t:"NATO Bombs Serbia",co:"Yugoslavia",d:"NATO launches an air campaign against Yugoslavia over Kosovo.",c:"war",w:"NATO_bombing_of_Yugoslavia"},
+/* ── 21ST CENTURY ── */
+{y:2000,la:51.5,lo:0.1,t:"Human Genome Mapped",co:"England",d:"Scientists complete the first draft of the entire human genome, transforming medicine.",c:"science",w:"Human_Genome_Project"},
+{y:2001,la:40.7,lo:-74.0,t:"September 11 Attacks",co:"United States",d:"Al-Qaeda hijackers crash planes into the World Trade Center and Pentagon, killing 2,977.",c:"war",w:"September_11_attacks"},
+{y:2001,la:34.5,lo:69.2,t:"Afghanistan War Begins",co:"Afghanistan",d:"The US invades Afghanistan to destroy Al-Qaeda and topple the Taliban.",c:"war",w:"War_in_Afghanistan_(2001%E2%80%932021)"},
+{y:2003,la:33.3,lo:44.4,t:"Iraq War",co:"Iraq",d:"A US-led coalition invades Iraq, toppling Saddam Hussein. Years of instability follow.",c:"war",w:"Iraq_War"},
+{y:2004,la:3.3,lo:95.9,t:"Indian Ocean Tsunami",co:"Indonesia",d:"A 9.1 magnitude earthquake triggers a massive tsunami that kills 228,000 across 14 countries.",c:"disaster",w:"2004_Indian_Ocean_earthquake_and_tsunami"},
+{y:2005,la:29.9,lo:-90.1,t:"Hurricane Katrina",co:"United States",d:"Katrina devastates New Orleans, killing 1,800 and exposing catastrophic emergency failures.",c:"disaster",w:"Hurricane_Katrina"},
+{y:2007,la:37.3,lo:-122.0,t:"iPhone Launched",co:"United States",d:"Apple's iPhone transforms computing, communication and modern life.",c:"science",w:"iPhone_(1st_generation)"},
+{y:2008,la:40.7,lo:-74.0,t:"Global Financial Crisis",co:"United States",d:"The collapse of Lehman Brothers triggers the worst global financial crisis since the Great Depression.",c:"economy",w:"Financial_crisis_of_2007%E2%80%932008"},
+{y:2008,la:30.6,lo:103.9,t:"Sichuan Earthquake",co:"China",d:"A 7.9 magnitude earthquake kills nearly 70,000 people in Sichuan province.",c:"disaster",w:"2008_Sichuan_earthquake"},
+{y:2009,la:38.9,lo:-77.0,t:"Obama Elected President",co:"United States",d:"Barack Obama becomes the first African American president of the United States.",c:"politics",w:"Barack_Obama"},
+{y:2010,la:18.5,lo:-72.3,t:"Haiti Earthquake",co:"Haiti",d:"A catastrophic 7.0 magnitude earthquake kills between 100,000 and 316,000.",c:"disaster",w:"2010_Haiti_earthquake"},
+{y:2010,la:35.0,lo:9.0,t:"Arab Spring Begins",co:"Tunisia",d:"A street vendor's self-immolation triggers revolutions across the Arab world.",c:"politics",w:"Arab_Spring"},
+{y:2011,la:38.3,lo:141.0,t:"Fukushima Nuclear Disaster",co:"Japan",d:"A massive earthquake and tsunami trigger three nuclear meltdowns at Fukushima Daiichi.",c:"disaster",w:"Fukushima_nuclear_disaster"},
+{y:2011,la:32.9,lo:13.2,t:"Libyan Civil War",co:"Libya",d:"NATO-backed rebels overthrow Gaddafi after 42 years of rule.",c:"war",w:"First_Libyan_Civil_War"},
+{y:2011,la:33.6,lo:73.1,t:"Bin Laden Killed",co:"Pakistan",d:"US Navy SEALs kill Al-Qaeda leader Osama bin Laden in a secret raid in Abbottabad.",c:"war",w:"Death_of_Osama_bin_Laden"},
+{y:2013,la:55.75,lo:37.6,t:"Snowden Revelations",co:"Russia",d:"NSA contractor Edward Snowden reveals global mass surveillance programs.",c:"politics",w:"Edward_Snowden"},
+{y:2014,la:50.4,lo:30.5,t:"Crimea Annexed",co:"Ukraine",d:"Russia annexes Crimea from Ukraine, triggering the worst East-West crisis since the Cold War.",c:"war",w:"Annexation_of_Crimea_by_the_Russian_Federation"},
+{y:2014,la:15.6,lo:32.5,t:"ISIS Declares Caliphate",co:"Iraq",d:"The Islamic State seizes vast territory across Iraq and Syria.",c:"war",w:"Islamic_State_of_Iraq_and_the_Levant"},
+{y:2015,la:48.8,lo:2.35,t:"Paris Climate Agreement",co:"France",d:"196 nations sign a landmark agreement to limit global temperature rise.",c:"politics",w:"Paris_Agreement"},
+{y:2015,la:48.8,lo:2.35,t:"Paris Attacks",co:"France",d:"ISIS terrorists kill 130 people in coordinated attacks across Paris.",c:"war",w:"November_2015_Paris_attacks"},
+{y:2016,la:51.5,lo:-0.12,t:"Brexit Vote",co:"England",d:"The UK votes to leave the European Union in a shock referendum result.",c:"politics",w:"Brexit"},
+{y:2016,la:38.9,lo:-77.0,t:"Trump Elected President",co:"United States",d:"Donald Trump wins the US presidency in a shock electoral result.",c:"politics",w:"Donald_Trump"},
+{y:2017,la:36.2,lo:37.2,t:"Battle of Mosul",co:"Iraq",d:"US-backed Iraqi forces defeat ISIS in Mosul after a brutal nine-month battle.",c:"war",w:"Battle_of_Mosul_(2016%E2%80%9317)"},
+{y:2018,la:37.6,lo:55.8,t:"Saudi Women Allowed to Drive",co:"Saudi Arabia",d:"Saudi Arabia lifts its ban on women driving, a milestone in social reform.",c:"culture",w:"Women_to_drive_movement"},
+{y:2019,la:23.1,lo:113.3,t:"COVID-19 Emerges",co:"China",d:"A novel coronavirus is identified in Wuhan, China. The resulting pandemic kills millions worldwide.",c:"disaster",w:"COVID-19_pandemic"},
+{y:2020,la:38.9,lo:-77.0,t:"George Floyd Murder",co:"United States",d:"Police killing of George Floyd sparks the largest protest movement in US history.",c:"politics",w:"Murder_of_George_Floyd"},
+{y:2020,la:23.1,lo:113.3,t:"COVID-19 Global Pandemic",co:"Global",d:"The coronavirus pandemic kills millions and transforms life worldwide.",c:"disaster",w:"COVID-19_pandemic"},
+{y:2021,la:34.5,lo:69.2,t:"Taliban Retakes Afghanistan",co:"Afghanistan",d:"The Taliban seize Kabul as US forces withdraw after 20 years.",c:"politics",w:"Fall_of_Kabul_(2021)"},
+{y:2022,la:50.4,lo:30.5,t:"Russia Invades Ukraine",co:"Ukraine",d:"Russia launches a full-scale invasion of Ukraine, the largest land war in Europe since WWII.",c:"war",w:"2022_Russian_invasion_of_Ukraine"},
+{y:2023,la:31.5,lo:34.4,t:"Hamas Attack on Israel",co:"Israel",d:"Hamas militants kill 1,200 Israelis in the deadliest attack on Jews since the Holocaust.",c:"war",w:"2023_Hamas-led_attack_on_Israel"},
+{y:2023,la:37.0,lo:37.2,t:"Turkey-Syria Earthquake",co:"Turkey",d:"A 7.8 magnitude earthquake strikes southern Turkey and Syria, killing over 50,000 people.",c:"disaster",w:"2023_Turkey%E2%80%93Syria_earthquake"},
+{y:2023,la:15.6,lo:32.5,t:"Sudan Civil War",co:"Sudan",d:"Fighting between Sudan's army and paramilitaries triggers a massive humanitarian crisis.",c:"war",w:"Sudanese_civil_war_(2023%E2%80%93present)"},
+{y:2024,la:50.4,lo:30.5,t:"Ukraine War — Year 3",co:"Ukraine",d:"The war enters its third year with no clear end in sight, reshaping European security.",c:"war",w:"2022_Russian_invasion_of_Ukraine"},
 ];
 
 var uEv=[];try{uEv=JSON.parse(localStorage.getItem('mth_u')||'[]');}catch(e){}
 var aCats=new Set(['war','politics','science','culture','disaster','exploration','economy']);
 var curY=1969,rf=null,rt=null,WIN=5;
+var markers=[];
 
 function aEv(){return DB.concat(uEv);}
 function era(y){if(y<-2000)return'Prehistoric';if(y<-500)return'Ancient';if(y<500)return'Classical';if(y<1000)return'Early Medieval';if(y<1500)return'Medieval';if(y<1800)return'Early Modern';if(y<1900)return'Industrial Age';if(y<1945)return'Modern';if(y<1991)return'Cold War Era';return'Contemporary';}
@@ -303,112 +597,56 @@ function updC(){
   });
 }
 
-// ── THREE.JS
-var renderer=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true});
-renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-renderer.setSize(window.innerWidth,window.innerHeight);
-renderer.setClearColor(0x0d1117);
+// ── MAPBOX GL MAP
+var map=new mapboxgl.Map({
+  container:'map',
+  style:'mapbox://styles/mapbox/streets-v12',
+  projection:'globe',
+  zoom:1.8,
+  center:[20,30],
+  maxZoom:12,
+  minZoom:0.5
+});
 
-var scene=new THREE.Scene();
-var cam=new THREE.PerspectiveCamera(42,window.innerWidth/window.innerHeight,0.1,1000);
-cam.position.z=2.2;
+map.addControl(new mapboxgl.NavigationControl({showCompass:false}),'top-right');
 
-scene.add(new THREE.AmbientLight(0x445566,2.5));
-var sun=new THREE.DirectionalLight(0xddeeff,1.8);
-sun.position.set(4,1.5,3);
-scene.add(sun);
+// Add atmosphere on globe
+map.on('error',function(e){console.error('Map error:',e);});
+map.on('style.load',function(){
+  map.setFog({
+    color:'rgb(186,210,235)',
+    'high-color':'rgb(80,130,210)',
+    'horizon-blend':0.04,
+    'space-color':'rgb(9,13,24)',
+    'star-intensity':0.5
+  });
+  buildMarkers();
+});
 
-// Stars
-var sg=new THREE.BufferGeometry();
-var sp=[];
-for(var i=0;i<6000;i++){
-  var t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1),r=80+Math.random()*40;
-  sp.push(r*Math.sin(p)*Math.cos(t),r*Math.cos(p),r*Math.sin(p)*Math.sin(t));
+function clearMarkers(){
+  markers.forEach(function(m){m.remove();});
+  markers=[];
 }
-sg.setAttribute('position',new THREE.Float32BufferAttribute(sp,3));
-scene.add(new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:0.12,transparent:true,opacity:0.6})));
 
-// Globe
-var glob=new THREE.Group();
-scene.add(glob);
-var emat=new THREE.MeshLambertMaterial({color:0x2255aa});
-glob.add(new THREE.Mesh(new THREE.SphereGeometry(1,64,64),emat));
-glob.add(new THREE.Mesh(new THREE.SphereGeometry(1.036,64,64),
-  new THREE.MeshLambertMaterial({color:0x7aadcc,transparent:true,opacity:0.08,side:THREE.FrontSide})));
-
-// Load texture
-new THREE.TextureLoader().load(
-  'https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/earth_atmos_2048.jpg',
-  function(tex){emat.map=tex;emat.color.set(0xffffff);emat.needsUpdate=true;},
-  undefined,
-  function(){
-    new THREE.TextureLoader().load(
-      'https://cdn.jsdelivr.net/npm/three-globe@2.26.4/example/img/earth-blue-marble.jpg',
-      function(tex){emat.map=tex;emat.color.set(0xffffff);emat.needsUpdate=true;}
-    );
-  }
-);
-
-// ── MARKERS
-function llv(la,lo,r){
-  var phi=(90-la)*Math.PI/180,theta=(lo+180)*Math.PI/180;
-  return new THREE.Vector3(-r*Math.sin(phi)*Math.cos(theta),r*Math.cos(phi),r*Math.sin(phi)*Math.sin(theta));
-}
-var mkg=new THREE.Group();
-glob.add(mkg);
-var mks=[];
-
-function buildMk(){
-  while(mkg.children.length)mkg.remove(mkg.children[0]);
-  mks=[];
+function buildMarkers(){
+  clearMarkers();
   gVis().forEach(function(ev){
-    var col=new THREE.Color(CC[ev.c]||'#fff');
-    var pos=llv(ev.la,ev.lo,1.012);
-    var m=new THREE.Mesh(new THREE.SphereGeometry(0.013,8,8),new THREE.MeshBasicMaterial({color:col}));
-    m.position.copy(pos);m.userData=ev;mkg.add(m);mks.push(m);
-    var ring=new THREE.Mesh(new THREE.RingGeometry(0.017,0.023,16),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0.35,side:THREE.DoubleSide}));
-    ring.position.copy(pos);ring.lookAt(new THREE.Vector3(0,0,0));ring.rotateX(Math.PI/2);mkg.add(ring);
+    var el=document.createElement('div');
+    el.className='mkr';
+    el.style.background=CC[ev.c]||'#fff';
+    el.style.color=CC[ev.c]||'#fff';
+    el.title=ev.t;
+    el.addEventListener('click',function(e){
+      e.stopPropagation();
+      showEv(ev);
+    });
+    var m=new mapboxgl.Marker({element:el, anchor:'center'})
+      .setLngLat([ev.lo,ev.la])
+      .addTo(map);
+    markers.push(m);
   });
   updC();
 }
-buildMk();
-
-// ── MOUSE / TOUCH
-var ray=new THREE.Raycaster(),mou=new THREE.Vector2();
-var drag=false,px=0,py=0,trY=0.3,trX=0,rY=0.3,rX=0,autoR=true,zoom=2.2,pt=0;
-var cvs=renderer.domElement;
-
-cvs.addEventListener('mousedown',function(e){drag=true;autoR=false;px=e.clientX;py=e.clientY;cvs.style.cursor='grabbing';});
-window.addEventListener('mouseup',function(){drag=false;cvs.style.cursor='grab';});
-cvs.addEventListener('mousemove',function(e){
-  if(drag){
-    trY+=(e.clientX-px)*0.004;trX+=(e.clientY-py)*0.004;
-    trX=Math.max(-1.4,Math.min(1.4,trX));px=e.clientX;py=e.clientY;
-  } else {
-    mou.x=(e.clientX/window.innerWidth)*2-1;
-    mou.y=-(e.clientY/window.innerHeight)*2+1;
-    ray.setFromCamera(mou,cam);
-    cvs.style.cursor=ray.intersectObjects(mks).length?'pointer':'grab';
-  }
-});
-cvs.addEventListener('click',function(e){
-  mou.x=(e.clientX/window.innerWidth)*2-1;
-  mou.y=-(e.clientY/window.innerHeight)*2+1;
-  ray.setFromCamera(mou,cam);
-  var h=ray.intersectObjects(mks);
-  if(h.length)showEv(h[0].object.userData);
-});
-cvs.addEventListener('wheel',function(e){zoom+=e.deltaY*0.002;zoom=Math.max(1.3,Math.min(5,zoom));},{passive:true});
-var lt=null;
-cvs.addEventListener('touchstart',function(e){drag=true;autoR=false;lt={x:e.touches[0].clientX,y:e.touches[0].clientY};});
-window.addEventListener('touchend',function(){drag=false;});
-cvs.addEventListener('touchmove',function(e){
-  if(!drag||!lt)return;
-  trY+=(e.touches[0].clientX-lt.x)*0.004;trX+=(e.touches[0].clientY-lt.y)*0.004;
-  trX=Math.max(-1.4,Math.min(1.4,trX));
-  lt={x:e.touches[0].clientX,y:e.touches[0].clientY};
-  e.preventDefault();
-},{passive:false});
 
 // ── EVENT PANEL
 var wc={};
@@ -418,7 +656,7 @@ function fetchWiki(t,cb){
   fetch('https://en.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(t))
     .then(function(r){return r.json();})
     .then(function(d){
-      wc[t]={ex:d.extract?d.extract.slice(0,380)+'...':null,th:d.thumbnail?d.thumbnail.source:null};
+      wc[t]={ex:d.extract?d.extract.slice(0,400)+'...':null,th:d.thumbnail?d.thumbnail.source:null};
       cb(wc[t]);
     }).catch(function(){cb(null);});
 }
@@ -438,6 +676,8 @@ function showEv(ev){
   document.getElementById('ewx').style.display='none';
   document.getElementById('ewi').style.display='none';
   document.getElementById('ep').classList.add('show');
+  // Fly to event
+  map.flyTo({center:[ev.lo,ev.la],zoom:Math.max(map.getZoom(),3),duration:1000});
   fetchWiki(ev.w,function(w){
     if(!w)return;
     if(w.th){var wi=document.getElementById('ewi');wi.src=w.th;wi.style.display='block';}
@@ -446,15 +686,13 @@ function showEv(ev){
 }
 document.getElementById('ecl').addEventListener('click',function(){document.getElementById('ep').classList.remove('show');});
 
-// ── YEAR SLIDER
+// ── YEAR
 document.getElementById('ys').addEventListener('input',function(){
   curY=parseInt(this.value);rf=null;rt=null;
-  document.getElementById('yf').value='';
-  document.getElementById('yt2').value='';
+  document.getElementById('yf').value='';document.getElementById('yt2').value='';
   document.getElementById('yd').textContent=curY<0?Math.abs(curY)+' BC':curY;
   document.getElementById('ye').textContent=era(curY);
-  buildMk();
-  document.getElementById('ep').classList.remove('show');
+  buildMarkers();document.getElementById('ep').classList.remove('show');
 });
 
 document.getElementById('ya').addEventListener('click',function(){
@@ -464,14 +702,13 @@ document.getElementById('ya').addEventListener('click',function(){
     rf=Math.min(f,t);rt=Math.max(f,t);
     document.getElementById('yd').textContent=(rf<0?Math.abs(rf)+'BC':rf)+'–'+(rt<0?Math.abs(rt)+'BC':rt);
     document.getElementById('ye').textContent='Range';
-  } else if(!isNaN(f)){
+  }else if(!isNaN(f)){
     rf=null;rt=null;curY=f;
     document.getElementById('ys').value=f;
     document.getElementById('yd').textContent=f<0?Math.abs(f)+' BC':f;
     document.getElementById('ye').textContent=era(f);
   }
-  buildMk();
-  document.getElementById('ep').classList.remove('show');
+  buildMarkers();document.getElementById('ep').classList.remove('show');
 });
 
 document.querySelectorAll('.fb').forEach(function(b){
@@ -479,7 +716,7 @@ document.querySelectorAll('.fb').forEach(function(b){
     var c=b.dataset.c;
     if(aCats.has(c)){aCats.delete(c);b.classList.remove('on');}
     else{aCats.add(c);b.classList.add('on');}
-    buildMk();
+    buildMarkers();
   });
 });
 
@@ -503,7 +740,7 @@ seEl.addEventListener('input',function(){
       document.getElementById('ys').value=curY;
       document.getElementById('yd').textContent=curY<0?Math.abs(curY)+' BC':curY;
       document.getElementById('ye').textContent=era(curY);
-      buildMk();showEv(ev);
+      buildMarkers();showEv(ev);
       srEl.style.display='none';seEl.value='';
     });
   });
@@ -511,31 +748,7 @@ seEl.addEventListener('input',function(){
 document.addEventListener('click',function(e){if(!e.target.closest('.box'))srEl.style.display='none';});
 
 // ── LANGUAGE
-var LABELS={
-  en:{search:'Search Events & People',ph:'e.g. Napoleon, Battle...',year:'Year / Year Range',from:'From e.g. -480',to:'To e.g. 1945',apply:'Apply',cats:'Categories',add:'+ Add Event'},
-  zh:{search:'搜索事件和人物',ph:'例如：拿破仑，战役',year:'年份/年份范围',from:'从',to:'到',apply:'应用',cats:'类别',add:'+ 添加事件'},
-  hi:{search:'घटनाएं खोजें',ph:'जैसे नेपोलियन, युद्ध',year:'वर्ष / वर्ष सीमा',from:'से',to:'तक',apply:'लागू करें',cats:'श्रेणियां',add:'+ जोड़ें'},
-  es:{search:'Buscar eventos y personas',ph:'ej. Napoleón, Batalla',year:'Año / Rango de años',from:'Desde',to:'Hasta',apply:'Aplicar',cats:'Categorías',add:'+ Agregar evento'},
-  ar:{search:'البحث عن الأحداث',ph:'مثل نابليون، معركة',year:'السنة / نطاق السنوات',from:'من',to:'إلى',apply:'تطبيق',cats:'الفئات',add:'+ إضافة حدث'},
-  tr:{search:'Olay ve Kişi Ara',ph:'örn. Napolyon, Savaş',year:'Yıl / Yıl Aralığı',from:'Başlangıç',to:'Bitiş',apply:'Uygula',cats:'Kategoriler',add:'+ Olay Ekle'},
-  fr:{search:'Rechercher événements',ph:'ex. Napoléon, Bataille',year:"Année / Plage d'années",from:'De',to:'À',apply:'Appliquer',cats:'Catégories',add:'+ Ajouter'},
-  pt:{search:'Pesquisar eventos',ph:'ex. Napoleão, Batalha',year:'Ano / Intervalo',from:'De',to:'Até',apply:'Aplicar',cats:'Categorias',add:'+ Adicionar'},
-  ru:{search:'Поиск событий',ph:'напр. Наполеон, Битва',year:'Год / Диапазон лет',from:'От',to:'До',apply:'Применить',cats:'Категории',add:'+ Добавить'},
-  de:{search:'Ereignisse suchen',ph:'z.B. Napoleon, Schlacht',year:'Jahr / Jahresbereich',from:'Von',to:'Bis',apply:'Anwenden',cats:'Kategorien',add:'+ Hinzufügen'}
-};
-function applyLang(l){
-  var L=LABELS[l]||LABELS.en;
-  document.body.style.direction=l==='ar'?'rtl':'ltr';
-  document.getElementById('l-search').textContent=L.search;
-  document.getElementById('se').placeholder=L.ph;
-  document.getElementById('l-year').textContent=L.year;
-  document.getElementById('yf').placeholder=L.from;
-  document.getElementById('yt2').placeholder=L.to;
-  document.getElementById('ya').textContent=L.apply;
-  document.getElementById('l-cats').textContent=L.cats;
-  document.getElementById('ab').textContent=L.add;
-}
-document.getElementById('ls').addEventListener('change',function(){applyLang(this.value);});
+
 
 // ── ADD EVENT
 document.getElementById('ab').addEventListener('click',function(){document.getElementById('ap').classList.toggle('show');});
@@ -554,27 +767,9 @@ document.getElementById('svb').addEventListener('click',function(){
   document.getElementById('sm').style.display='block';
   setTimeout(function(){document.getElementById('sm').style.display='none';},2500);
   ['c-title','c-year','c-country','c-lat','c-lon','c-desc'].forEach(function(id){document.getElementById(id).value='';});
-  buildMk();
+  buildMarkers();
 });
 
-// ── ANIMATION
-function loop(){
-  requestAnimationFrame(loop);
-  pt+=0.02;
-  if(autoR)trY+=0.001;
-  rX+=(trX-rX)*0.07;rY+=(trY-rY)*0.07;
-  glob.rotation.x=rX;glob.rotation.y=rY;
-  cam.position.z+=(zoom-cam.position.z)*0.07;
-  for(var i=0;i<mks.length;i++){mks[i].scale.setScalar(1+0.18*Math.sin(pt+i*1.3));}
-  renderer.render(scene,cam);
-}
-loop();
-
-window.addEventListener('resize',function(){
-  renderer.setSize(window.innerWidth,window.innerHeight);
-  cam.aspect=window.innerWidth/window.innerHeight;
-  cam.updateProjectionMatrix();
-});
 updC();
 </script>
 </body>
