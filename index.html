@@ -7,7 +7,7 @@
 <link href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0d1117;width:100vw;height:100vh;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;color:#c9d1d9}
+body{background:#0d1117;width:100vw;height:100vh;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;color:#c9d1d9;font-size:14px}
 #map{position:absolute;inset:0;width:100%;height:100%}
 
 /* Globe projection fix */
@@ -24,8 +24,8 @@ body{background:#0d1117;width:100vw;height:100vh;overflow:hidden;font-family:'Se
 #ls{background:rgba(13,17,23,.9);border:1px solid #30363d;color:#8b949e;padding:5px 9px;font-size:11px;cursor:pointer;outline:none;border-radius:4px}
 
 /* LEFT PANEL */
-#lp{position:absolute;top:56px;left:16px;z-index:100;width:260px;display:flex;flex-direction:column;gap:7px}
-.box{background:rgba(10,14,22,.93);border:1px solid #1e2535;border-radius:6px;padding:12px 14px}
+#lp{position:absolute;top:56px;left:16px;z-index:100;width:280px;display:flex;flex-direction:column;gap:7px}
+.box{background:rgba(10,14,22,.93);border:1px solid #1e2535;border-radius:6px;padding:14px 16px}
 .bl{display:block;font-size:13px;color:#e8b84b;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;font-weight:600}
 .box input{width:100%;background:rgba(255,255,255,.04);border:1px solid #1e2535;color:#c9d1d9;padding:7px 9px;font-size:13px;border-radius:4px;outline:none}
 .box input:focus{border-color:#e8b84b}
@@ -106,7 +106,7 @@ body{background:#0d1117;width:100vw;height:100vh;overflow:hidden;font-family:'Se
 #hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:100;font-size:11px;color:#1a2535;letter-spacing:2px;text-transform:uppercase;pointer-events:none}
 
 /* Custom marker */
-.mkr{width:13px;height:13px;border-radius:50%;cursor:pointer;border:2px solid rgba(255,255,255,.35);box-shadow:0 0 7px currentColor}
+.mkr{width:16px;height:16px;border-radius:50%;cursor:pointer;border:2px solid rgba(255,255,255,.6);box-shadow:0 0 10px currentColor,0 0 20px currentColor;z-index:999;position:relative}
 .mkr:hover{border-color:rgba(255,255,255,.9);box-shadow:0 0 16px currentColor}
 </style>
 </head>
@@ -580,7 +580,7 @@ var DB=[
 
 var uEv=[];try{uEv=JSON.parse(localStorage.getItem('mth_u')||'[]');}catch(e){}
 var aCats=new Set(['war','politics','science','culture','disaster','exploration','economy']);
-var curY=1969,rf=null,rt=null,WIN=5;
+var curY=1969,rf=null,rt=null,WIN=8;
 var markers=[];
 
 function aEv(){return DB.concat(uEv);}
@@ -602,8 +602,8 @@ var map=new mapboxgl.Map({
   container:'map',
   style:'mapbox://styles/mapbox/streets-v12',
   projection:'globe',
-  zoom:1.8,
-  center:[20,30],
+  zoom:1.5,
+  center:[20,25],
   maxZoom:12,
   minZoom:0.5
 });
@@ -640,7 +640,7 @@ function buildMarkers(){
       e.stopPropagation();
       showEv(ev);
     });
-    var m=new mapboxgl.Marker({element:el, anchor:'center'})
+    var m=new mapboxgl.Marker({element:el, anchor:'center', pitchAlignment:'map', rotationAlignment:'map'})
       .setLngLat([ev.lo,ev.la])
       .addTo(map);
     markers.push(m);
