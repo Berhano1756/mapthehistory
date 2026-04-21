@@ -18,16 +18,16 @@ body{background:#0d1117;width:100vw;height:100vh;overflow:hidden;font-family:'Se
 /* HEADER */
 #hdr{position:absolute;top:0;left:0;right:0;z-index:100;padding:11px 20px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(13,17,23,.97) 70%,transparent);pointer-events:none}
 #hdr>*{pointer-events:auto}
-#logo{font-size:32px;letter-spacing:4px;color:#e8b84b;text-transform:uppercase;font-weight:300}
+#logo{font-size:28px;letter-spacing:4px;color:#e8b84b;text-transform:uppercase;font-weight:300}
 #logo b{color:#f0d060;font-weight:600}
 #tag{font-size:9px;color:#3a4050;letter-spacing:2px;text-transform:uppercase;margin-top:2px}
 #ls{background:rgba(13,17,23,.9);border:1px solid #30363d;color:#8b949e;padding:5px 9px;font-size:11px;cursor:pointer;outline:none;border-radius:4px}
 
 /* LEFT PANEL */
-#lp{position:absolute;top:56px;left:16px;z-index:100;width:230px;display:flex;flex-direction:column;gap:7px;zoom:1.5}
+#lp{position:absolute;top:56px;left:16px;z-index:100;width:260px;display:flex;flex-direction:column;gap:7px}
 .box{background:rgba(10,14,22,.93);border:1px solid #1e2535;border-radius:6px;padding:14px 16px}
-.bl{display:block;font-size:13px;color:#e8b84b;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;font-weight:600}
-.box input{width:100%;background:rgba(255,255,255,.04);border:1px solid #1e2535;color:#c9d1d9;padding:7px 9px;font-size:13px;border-radius:4px;outline:none}
+.bl{display:block;font-size:16px;color:#e8b84b;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;font-weight:600}
+.box input{width:100%;background:rgba(255,255,255,.04);border:1px solid #1e2535;color:#c9d1d9;padding:8px 10px;font-size:15px;border-radius:4px;outline:none}
 .box input:focus{border-color:#e8b84b}
 .box input::placeholder{color:#2e3850}
 #sr{max-height:145px;overflow-y:auto;margin-top:6px;display:none}
@@ -40,9 +40,9 @@ body{background:#0d1117;width:100vw;height:100vh;overflow:hidden;font-family:'Se
 .yr{display:flex;gap:6px;align-items:center}
 .yr input{flex:1;text-align:center}
 .yr span{color:#2e3850;font-size:11px}
-#ya{width:100%;margin-top:6px;background:rgba(232,184,75,.12);border:1px solid rgba(232,184,75,.3);color:#e8b84b;padding:6px;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:4px;font-weight:600}
+#ya{width:100%;margin-top:6px;background:rgba(232,184,75,.12);border:1px solid rgba(232,184,75,.3);color:#e8b84b;padding:8px;font-size:14px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:4px;font-weight:600}
 #ya:hover{background:rgba(232,184,75,.2)}
-.fb{display:flex;align-items:center;gap:7px;padding:6px 7px;cursor:pointer;font-size:14px;border-radius:4px;color:#3a4560;transition:all .15s;user-select:none}
+.fb{display:flex;align-items:center;gap:7px;padding:8px 8px;cursor:pointer;font-size:16px;border-radius:4px;color:#3a4560;transition:all .15s;user-select:none}
 .fb:hover{background:rgba(255,255,255,.03)}
 .fb.on{color:#8b949e}
 .fd{width:8px;height:8px;border-radius:50%;flex-shrink:0;opacity:.4}
@@ -50,13 +50,13 @@ body{background:#0d1117;width:100vw;height:100vh;overflow:hidden;font-family:'Se
 .fc{margin-left:auto;font-size:10px;color:#2e3850}
 
 /* YEAR PANEL */
-#yp{position:absolute;right:18px;top:50%;transform:translateY(-50%);z-index:100;display:flex;flex-direction:column;align-items:center;gap:8px;zoom:1.4}
-#yd{font-size:36px;color:#e8b84b;letter-spacing:2px;min-width:85px;text-align:center;font-weight:300;text-shadow:0 0 20px rgba(232,184,75,.3)}
-#ye{font-size:11px;color:#2e3850;letter-spacing:2px;text-transform:uppercase;text-align:center;min-height:13px}
+#yp{position:absolute;right:18px;top:50%;transform:translateY(-50%);z-index:100;display:flex;flex-direction:column;align-items:center;gap:8px}
+#yd{font-size:40px;color:#e8b84b;letter-spacing:2px;min-width:85px;text-align:center;font-weight:300;text-shadow:0 0 20px rgba(232,184,75,.3)}
+#ye{font-size:13px;color:#2e3850;letter-spacing:2px;text-transform:uppercase;text-align:center;min-height:13px}
 #ys{-webkit-appearance:none;appearance:none;writing-mode:vertical-lr;direction:rtl;width:3px;height:300px;background:rgba(30,37,53,.9);border-radius:2px;outline:none;cursor:pointer}
 #ys::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#e8b84b;cursor:pointer;box-shadow:0 0 8px rgba(232,184,75,.5)}
 .yt{font-size:9px;color:#1e2535}
-#ec{position:absolute;top:56px;right:56px;z-index:100;font-size:13px;color:#2e3850;text-align:right}
+#ec{position:absolute;top:56px;right:56px;z-index:100;font-size:15px;color:#2e3850;text-align:right}
 #ec span{color:#e8b84b}
 
 /* EVENT PANEL */
@@ -106,7 +106,7 @@ body{background:#0d1117;width:100vw;height:100vh;overflow:hidden;font-family:'Se
 #hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:100;font-size:11px;color:#1a2535;letter-spacing:2px;text-transform:uppercase;pointer-events:none}
 
 /* Custom marker */
-.mkr{width:18px;height:18px;border-radius:50%;cursor:pointer;border:2px solid rgba(255,255,255,.7);box-shadow:0 0 12px currentColor,0 0 24px currentColor;z-index:9999;position:relative}
+.mkr{width:20px;height:20px;border-radius:50%;cursor:pointer;border:2.5px solid rgba(255,255,255,.8);box-shadow:0 0 14px currentColor,0 0 28px currentColor;z-index:9999;position:relative}
 .mkr:hover{border-color:rgba(255,255,255,.9);box-shadow:0 0 16px currentColor}
 </style>
 </head>
@@ -580,7 +580,7 @@ var DB=[
 
 var uEv=[];try{uEv=JSON.parse(localStorage.getItem('mth_u')||'[]');}catch(e){}
 var aCats=new Set(['war','politics','science','culture','disaster','exploration','economy']);
-var curY=1969,rf=null,rt=null,WIN=8;
+var curY=1969,rf=null,rt=null,WIN=10;
 var markers=[];
 
 function aEv(){return DB.concat(uEv);}
@@ -614,9 +614,9 @@ map.addControl(new mapboxgl.NavigationControl({showCompass:false}),'top-right');
 map.on('error',function(e){console.error('Map error:',e);});
 map.on('style.load',function(){
   map.setFog({
-    color:'rgb(220,230,240)',
-    'high-color':'rgb(100,150,200)',
-    'horizon-blend':0.02,
+    color:'rgb(180,210,230)',
+    'high-color':'rgb(80,140,200)',
+    'horizon-blend':0.01,
     'space-color':'rgb(8,12,20)',
     'star-intensity':0.6
   });
